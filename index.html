@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<!-- saved from url=(0046)file:///C:/Users/giovanni/Downloads/index.html -->
-<html lang="it"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="it">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Baito dell'Orso — Quaderno di Campo</title>
-<link rel="preconnect" href="https://fonts.googleapis.com/">
-<link href="./index_files/css2" rel="stylesheet">
-<script src="./index_files/lucide@latest"></script>
-<link rel="stylesheet" href="./index_files/leaflet.css">
-<script src="./index_files/leaflet.js.download"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js';
@@ -408,8 +408,8 @@ footer .center{font-family:var(--serif);font-style:italic;text-transform:none;le
 
 <header class="frame">
   <div class="frame-inner">
-    <div class="brand" onclick="goto(&#39;home&#39;)">
-      <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5.882V19.24a1.76 1.76 0 0 1-3.417.592l-2.147-6.15M18 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-7-1a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path></svg>
+    <div class="brand" onclick="goto('home')">
+      <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5.882V19.24a1.76 1.76 0 0 1-3.417.592l-2.147-6.15M18 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-7-1a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
       <div>
         <div class="brand-name">Baito<span class="dot">·</span>dell'Orso</div>
         <div class="brand-sub">Quaderno di Campo</div>
@@ -417,120 +417,28 @@ footer .center{font-family:var(--serif);font-style:italic;text-transform:none;le
     </div>
     <nav class="nav" id="nav">
       <button class="nav-link active" data-route="home">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Home
       </button>
       <button class="nav-link" data-route="viaggiare">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
         Viaggiare
       </button>
       <button class="nav-link" data-route="shop">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-xs"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         Shop del Baito
       </button>
     </nav>
     <div class="nav-end">
       <div class="sync-dot" id="sync-dot" title="Stato sync"></div>
-      <button class="btn btn-ghost btn-sm" id="auth-btn" onclick="toggleAuth()" style="display: inline-flex;">Login</button>
+      <button class="btn btn-ghost btn-sm" id="auth-btn" onclick="toggleAuth()" style="display:none"></button>
     </div>
   </div>
 </header>
 
 <main id="app">
-  <div class="home-hero">
-    <h1>Un quaderno<br>per chi va<br><em>lontano.</em></h1>
-    <p>Itinerari in tenda da tetto, punti di riferimento, notti sotto un cielo che non si conosce. Tutto annotato.</p>
-    <div class="btns">
-      <button class="btn btn-primary" onclick="goto(&#39;viaggiare&#39;)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="route" aria-hidden="true" class="lucide lucide-route icon-sm"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg> Sfoglia i Viaggi</button>
-      <button class="btn btn-clay" onclick="goto(&#39;shop&#39;)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="shirt" aria-hidden="true" class="lucide lucide-shirt icon-sm"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></svg> Shop del Baito</button>
-    </div>
-  </div>
-  <div class="home-stats">
-    <div class="stat-box"><div class="stat-label"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="route" aria-hidden="true" class="lucide lucide-route icon-xs"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg> Viaggi Pianificati</div><div class="stat-value">10</div></div>
-    <div class="stat-box"><div class="stat-label"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" class="lucide lucide-map-pin icon-xs"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg> Tappe Totali</div><div class="stat-value">38</div></div>
-    <div class="stat-box"><div class="stat-label"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="ruler" aria-hidden="true" class="lucide lucide-ruler icon-xs"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"></path><path d="m14.5 12.5 2-2"></path><path d="m11.5 9.5 2-2"></path><path d="m8.5 6.5 2-2"></path><path d="m17.5 15.5 2-2"></path></svg> Km Pianificati</div><div class="stat-value">7650<span class="unit">km</span></div></div>
-  </div>
-  <div class="home-split">
-    <div>
-      <div class="home-section-title">
-        Itinerari
-        <span class="more" onclick="goto(&#39;viaggiare&#39;)">Vedi tutti <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right icon-xs"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></span>
-      </div>
-      <div class="trip-row" onclick="goto(&#39;itinerary&#39;,&#39;mp2h6nh6bpvb&#39;)">
-          <div class="trip-row-icon" style="background:#3a4d3620;color:#3a4d36"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="route" aria-hidden="true" class="lucide lucide-route icon-sm"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg></div>
-          <div class="trip-row-info">
-            <div class="trip-row-title">Fuga Corsica · Wild Ring Road</div>
-            <div class="trip-row-meta"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" style="width:10px;height:10px;" class="lucide lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>Corsica · Francia · 3295 km · 9 giorni</div>
-          </div>
-          <span class="status-badge status-draft">In Bozza</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right icon-sm trip-arrow"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-        </div><div class="trip-row" onclick="goto(&#39;itinerary&#39;,&#39;mp2h6nh69oi9&#39;)">
-          <div class="trip-row-icon" style="background:#3a4d3620;color:#3a4d36"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="route" aria-hidden="true" class="lucide lucide-route icon-sm"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg></div>
-          <div class="trip-row-info">
-            <div class="trip-row-title">Spagna · Eclissi via Traghetto</div>
-            <div class="trip-row-meta"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" style="width:10px;height:10px;" class="lucide lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>Spagna · via Mare · 2520 km · 14 giorni</div>
-          </div>
-          <span class="status-badge status-draft">In Bozza</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right icon-sm trip-arrow"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-        </div><div class="trip-row" onclick="goto(&#39;itinerary&#39;,&#39;mp2h6nh6tuhk&#39;)">
-          <div class="trip-row-icon" style="background:#3a4d3620;color:#3a4d36"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="route" aria-hidden="true" class="lucide lucide-route icon-sm"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg></div>
-          <div class="trip-row-info">
-            <div class="trip-row-title">Spagna · Eclissi Solare 2026</div>
-            <div class="trip-row-meta"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" style="width:10px;height:10px;" class="lucide lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>Spagna · Francia · 3580 km · 15 giorni</div>
-          </div>
-          <span class="status-badge status-active">In Corso</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right icon-sm trip-arrow"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-        </div><div class="trip-row" onclick="goto(&#39;itinerary&#39;,&#39;mp2h6nh6pyv2&#39;)">
-          <div class="trip-row-icon" style="background:#3a4d3620;color:#3a4d36"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="route" aria-hidden="true" class="lucide lucide-route icon-sm"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg></div>
-          <div class="trip-row-info">
-            <div class="trip-row-title">Progetto Scozia</div>
-            <div class="trip-row-meta"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" style="width:10px;height:10px;" class="lucide lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>Scozia · UK · 6920 km · 15 giorni</div>
-          </div>
-          <span class="status-badge status-filed">Archiviato</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right icon-sm trip-arrow"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-        </div><div class="trip-row" onclick="goto(&#39;itinerary&#39;,&#39;mp2h6nh64scc&#39;)">
-          <div class="trip-row-icon" style="background:#3a4d3620;color:#3a4d36"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="route" aria-hidden="true" class="lucide lucide-route icon-sm"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg></div>
-          <div class="trip-row-info">
-            <div class="trip-row-title">Progetto Sardegna</div>
-            <div class="trip-row-meta"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" style="width:10px;height:10px;" class="lucide lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>Sardegna · Italia · 1785 km · 10 giorni</div>
-          </div>
-          <span class="status-badge status-draft">In Bozza</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right icon-sm trip-arrow"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-        </div><div class="trip-row" onclick="goto(&#39;itinerary&#39;,&#39;mp2h6nh69xbj&#39;)">
-          <div class="trip-row-icon" style="background:#3a4d3620;color:#3a4d36"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="route" aria-hidden="true" class="lucide lucide-route icon-sm"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg></div>
-          <div class="trip-row-info">
-            <div class="trip-row-title">Progetto Polonia · Bisonti</div>
-            <div class="trip-row-meta"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" style="width:10px;height:10px;" class="lucide lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>Polonia · Białowieża · 2800 km · 10 giorni</div>
-          </div>
-          <span class="status-badge status-draft">In Bozza</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right icon-sm trip-arrow"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-        </div>
-      <div style="margin-top:16px"><button class="btn btn-primary btn-sm" onclick="openItinModal()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="plus" aria-hidden="true" class="lucide lucide-plus icon-sm"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg> Nuovo Viaggio</button></div>
-    </div>
-    <div>
-      <div class="home-section-title">
-        Punti di Riferimento
-        <span class="more" onclick="goto(&#39;punti&#39;)">Vedi tutti <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right icon-xs"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></span>
-      </div>
-      <div class="trip-row" onclick="goto(&#39;point&#39;,&#39;mp2h6nh6rapb&#39;)">
-        <div class="trip-row-icon" style="background:#b85a1f20;color:#b85a1f"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" class="lucide lucide-map-pin icon-sm"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
-        <div class="trip-row-info">
-          <div class="trip-row-title">Gorges du Verdon · Point Sublime</div>
-          <div class="trip-row-meta"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" style="width:10px;height:10px;" class="lucide lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>Alpi dell'Alta Provenza · Francia · 2 best points</div>
-        </div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right icon-sm trip-arrow"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-      </div><div class="trip-row" onclick="goto(&#39;point&#39;,&#39;mp2h6nh6r7ck&#39;)">
-        <div class="trip-row-icon" style="background:#b85a1f20;color:#b85a1f"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" class="lucide lucide-map-pin icon-sm"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
-        <div class="trip-row-info">
-          <div class="trip-row-title">Lago di Como · Riva Est</div>
-          <div class="trip-row-meta"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" style="width:10px;height:10px;" class="lucide lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>Lombardia · 2 best points</div>
-        </div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right icon-sm trip-arrow"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-      </div>
-      <div style="margin-top:16px"><button class="btn btn-clay btn-sm" onclick="openPointModal()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="plus" aria-hidden="true" class="lucide lucide-plus icon-sm"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg> Nuovo Punto</button></div>
-    </div>
-  </div>
-  <footer><div class="left"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="mountain-snow" aria-hidden="true" class="lucide lucide-mountain-snow icon-sm"><path d="m8 3 4 8 5-5 5 15H2L8 3z"></path><path d="M4.14 15.08c2.62-1.57 5.24-1.43 7.86.42 2.74 1.94 5.49 2 8.23.19"></path></svg> BAITO DELL'ORSO · v2.0</div><div class="center">«Mai sotto un cielo che non si conosce.»</div><div class="right">12 MAG 2026</div></footer></main>
+  <p style="padding:80px 0;text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--forest-faint);">CARICAMENTO…</p>
+</main>
 
 <div class="modal-back" id="modal-back"><div class="modal" id="modal"></div></div>
 <div class="toast" id="toast"></div>
@@ -1550,6 +1458,5 @@ Object.assign(window,{
   toast
 });
 </script>
-
-
-</body></html>
+</body>
+</html>
