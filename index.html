@@ -1,563 +1,464 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>🏐 Beach Volley Torneo</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #6b3410; }
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type=number] { -moz-appearance: textfield; }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,220,80,0.3); border-radius: 2px; }
-    button { font-family: 'Trebuchet MS', sans-serif; }
-    input { font-family: 'Trebuchet MS', sans-serif; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>🏐 Beach Volley Torneo</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Trebuchet MS',Tahoma,sans-serif;background:linear-gradient(160deg,#b5651d 0%,#d4a04a 25%,#e8c97a 45%,#c19a50 65%,#8b4513 100%);min-height:100vh;color:#fff;}
+input,button{font-family:inherit;}
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:rgba(0,0,0,0.2);}
+::-webkit-scrollbar-thumb{background:rgba(255,200,100,0.35);border-radius:3px;}
+.tab-btn{padding:7px 14px;border-radius:20px;border:2px solid;font-weight:800;font-size:12px;cursor:pointer;transition:all .2s;}
+.tab-btn.active{background:#ffe066;border-color:#ffe066;color:#333;}
+.tab-btn.inactive{background:rgba(0,0,0,0.45);border-color:rgba(255,255,255,0.2);color:#fff;}
+.card{background:rgba(0,0,0,0.62);border:1.5px solid rgba(255,200,100,0.28);border-radius:14px;}
+.inp{background:rgba(0,0,0,0.58);border:2px solid rgba(255,200,100,0.45);border-radius:8px;color:#fff;font-size:13px;padding:8px 10px;outline:none;width:100%;}
+.score-inp{width:46px;text-align:center;background:rgba(0,0,0,0.68);border:2px solid rgba(255,200,100,0.45);border-radius:8px;color:#fff;font-size:22px;font-weight:900;padding:5px 0;outline:none;}
+.btn-gold{background:#ffe066;border:none;border-radius:8px;color:#333;font-weight:800;cursor:pointer;}
+.btn-red{background:rgba(255,80,80,0.3);border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer;}
+.bar-fill{transition:width .6s cubic-bezier(.4,0,.2,1);}
+</style>
 </head>
 <body>
-  <div id="root"></div>
+<div id="app"></div>
+<script>
+'use strict';
 
-  <script type="text/babel">
-    const { useState, useCallback, useEffect } = React;
+/* ═══ DATA ══════════════════════════════════════════════════════ */
+var INIT_TEAMS = [
+  {id:1,name:"I di...Sperati",           logo:"",color:"#e74c3c",members:["Casagrande Lorenza","Paterno Ivo","Purin Silvia","Paterno Mara"]},
+  {id:2,name:"Monzarella",               logo:"",color:"#f39c12",members:["Lorenzo Rigo","Simone Sittoni Wassermann","Giacomo Gaiardo","Davide Ballin"]},
+  {id:3,name:"Cretino Basket",           logo:"",color:"#2ecc71",members:["TBD","TBD","TBD","TBD"]},
+  {id:4,name:"Associazione a Delinquere",logo:"",color:"#a855f7",members:["TBD","TBD","TBD","TBD"]},
+  {id:5,name:"New York Knicks",          logo:"",color:"#38bdf8",members:["Luca Gasperetti","TBD","TBD","TBD"]},
+  {id:6,name:"Super Chicche",            logo:"",color:"#f472b6",members:["Alessandra Konecni","Chiara Volpe","Angelica Moser","Anna Martinelli","Kati Stefani","Elisa Franzinelli"]},
+];
 
-    const INITIAL_TEAMS = [
-      { id: 1, name: "I di...Sperati",           logo: "", color: "#e74c3c", members: ["Casagrande Lorenza","Paterno Ivo","Purin Silvia","Paterno Mara"] },
-      { id: 2, name: "Monzarella",                logo: "", color: "#f39c12", members: ["Lorenzo Rigo","Simone Sittoni Wassermann","Giacomo Gaiardo","Davide Ballin"] },
-      { id: 3, name: "Cretino Basket",            logo: "", color: "#2ecc71", members: [] },
-      { id: 4, name: "Associazione a Delinquere", logo: "", color: "#a855f7", members: [] },
-      { id: 5, name: "New York Knicks",           logo: "", color: "#38bdf8", members: ["Luca Gasperetti"] },
-      { id: 6, name: "Super Chicche",             logo: "", color: "#f472b6", members: ["Alessandra Konecni","Chiara Volpe","Angelica Moser","Anna Martinelli","Kati Stefani","Elisa Franzinelli"] },
-    ];
+/* ═══ STATE ═════════════════════════════════════════════════════ */
+var teams       = JSON.parse(JSON.stringify(INIT_TEAMS));
+var matches     = genMatches(teams);
+var tab         = 'cal';
+var openMatch   = null;
+var openTeam    = null;
+var editLogo    = null;
+var logoInput   = '';
+var editMember  = null; // {tid,idx}
+var memberInput = '';
+var odds        = {1:'',2:'',3:'',4:'',5:'',6:''};
 
-    function buildMatches(teams) {
-      const ms = [];
-      let id = 1;
-      for (let i = 0; i < teams.length; i++)
-        for (let j = i + 1; j < teams.length; j++)
-          ms.push({ id: id++, home: teams[i].id, away: teams[j].id,
-                    s1h:"", s1a:"", s2h:"", s2a:"", played: false });
-      return ms;
+/* ═══ HELPERS ═══════════════════════════════════════════════════ */
+function genMatches(ts){
+  var out=[],id=1;
+  for(var i=0;i<ts.length;i++)
+    for(var j=i+1;j<ts.length;j++)
+      out.push({id:id++,home:ts[i].id,away:ts[j].id,s1h:'',s1a:'',s2h:'',s2a:'',played:false});
+  return out;
+}
+function shuffle(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
+  return a;
+}
+function matchResult(m){
+  var s1h=+m.s1h,s1a=+m.s1a,s2h=+m.s2h,s2a=+m.s2a;
+  if([s1h,s1a,s2h,s2a].some(isNaN))return null;
+  return{sH:(s1h>s1a?1:0)+(s2h>s2a?1:0),sA:(s1a>s1h?1:0)+(s2a>s2h?1:0)};
+}
+function standings(){
+  var st={};
+  teams.forEach(function(t){st[t.id]={id:t.id,G:0,V:0,P:0,SV:0,SP:0,Pts:0};});
+  matches.forEach(function(m){
+    if(!m.played)return;
+    var r=matchResult(m);if(!r)return;
+    st[m.home].G++;st[m.away].G++;
+    st[m.home].SV+=r.sH;st[m.home].SP+=r.sA;
+    st[m.away].SV+=r.sA;st[m.away].SP+=r.sH;
+    if(r.sH>r.sA){st[m.home].V++;st[m.home].Pts+=3;st[m.away].P++;st[m.away].Pts+=1;}
+    else if(r.sA>r.sH){st[m.away].V++;st[m.away].Pts+=3;st[m.home].P++;st[m.home].Pts+=1;}
+    else{st[m.home].Pts+=2;st[m.away].Pts+=2;}
+  });
+  return Object.values(st).sort(function(a,b){return(b.Pts-a.Pts)||((b.SV-b.SP)-(a.SV-a.SP));});
+}
+function getTeam(id){return teams.find(function(t){return t.id===id;});}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function logoEl(team,size){
+  var init=team.name.charAt(0).toUpperCase();
+  var fb='width:'+size+'px;height:'+size+'px;border-radius:50%;flex-shrink:0;background:'+team.color+'33;border:2px solid '+team.color+';display:inline-flex;align-items:center;justify-content:center;font-size:'+Math.round(size*.38)+'px;color:'+team.color+';font-weight:900;vertical-align:middle;';
+  if(!team.logo)return '<div style="'+fb+'">'+init+'</div>';
+  return '<img src="'+esc(team.logo)+'" alt="" data-tl="'+team.id+'" data-sz="'+size+'" style="width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;border:2px solid '+team.color+';flex-shrink:0;vertical-align:middle;">';
+}
+
+/* ═══ RENDER ════════════════════════════════════════════════════ */
+function render(){
+  var played=matches.filter(function(m){return m.played;}).length;
+  var pct=(played/matches.length*100).toFixed(0);
+
+  var html='';
+
+  /* HEADER */
+  html+='<div style="background:linear-gradient(180deg,rgba(0,70,150,0.96),rgba(0,110,210,0.84));padding:22px 20px 18px;text-align:center;border-bottom:4px solid rgba(255,220,80,.6);box-shadow:0 4px 30px rgba(0,0,0,.45);">';
+  html+='<div style="font-size:11px;letter-spacing:5px;color:#ffe066;text-transform:uppercase;">🏖️ Torneo Amici</div>';
+  html+='<div style="font-size:26px;font-weight:900;letter-spacing:1px;">BEACH VOLLEY 🏐</div>';
+  html+='<div style="font-size:12px;color:#ffe066;font-style:italic;margin-top:2px;">Girone All\'Italiana · 6 Squadre · 15 Partite</div>';
+  html+='<div style="max-width:280px;margin:12px auto 0;">';
+  html+='<div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px;"><span>'+played+' giocate</span><span>'+(matches.length-played)+' rimaste</span></div>';
+  html+='<div style="height:6px;background:rgba(255,255,255,.15);border-radius:3px;"><div class="bar-fill" style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,#ffe066,#ff9500);border-radius:3px;"></div></div>';
+  html+='</div></div>';
+
+  /* FORMAT STRIP */
+  html+='<div style="background:rgba(0,0,0,.55);padding:8px 16px;display:flex;justify-content:center;gap:18px;font-size:12px;flex-wrap:wrap;">';
+  [['⏱️ Set 1','5 min'],['🔄 Pausa+cambio','2 min'],['⏱️ Set 2','5 min'],['📋 Tot.','~15 min']].forEach(function(p){
+    html+='<div style="text-align:center;"><div style="color:#ffe066;font-weight:700;">'+p[0]+'</div><div style="color:rgba(255,255,255,.7);">'+p[1]+'</div></div>';
+  });
+  html+='</div>';
+
+  /* TABS */
+  html+='<div style="display:flex;justify-content:center;gap:6px;padding:12px 12px 0;flex-wrap:wrap;">';
+  [['cal','📅 Partite'],['cls','🏆 Classifica'],['sqd','👥 Squadre'],['bet','💰 Scommesse']].forEach(function(p){
+    html+='<button class="tab-btn '+(tab===p[0]?'active':'inactive')+'" onclick="setTab(\''+p[0]+'\')">'+p[1]+'</button>';
+  });
+  html+='</div>';
+
+  /* CONTENT */
+  html+='<div style="max-width:640px;margin:0 auto;padding:14px 12px 60px;">';
+  if(tab==='cal') html+=buildCal();
+  if(tab==='cls') html+=buildCls();
+  if(tab==='sqd') html+=buildSqd();
+  if(tab==='bet') html+=buildBet();
+  html+='</div>';
+
+  document.getElementById('app').innerHTML=html;
+  afterRender();
+}
+
+/* ── CALENDARIO ── */
+function buildCal(){
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
+  h+='<span style="font-size:12px;color:rgba(255,255,255,.5);">Tocca per inserire i punti</span>';
+  h+='<button onclick="doRandomize()" style="padding:8px 14px;background:linear-gradient(135deg,#ffe066,#ff9500);border:none;border-radius:20px;color:#333;font-weight:800;font-size:12px;cursor:pointer;">🔀 Randomizza</button>';
+  h+='</div>';
+
+  matches.forEach(function(m,idx){
+    var home=getTeam(m.home),away=getTeam(m.away);
+    if(!home||!away)return;
+    var r=m.played?matchResult(m):null;
+    var isOpen=openMatch===m.id;
+
+    var scoreHtml=r
+      ?'<span style="background:'+(r.sH>r.sA?'rgba(80,200,100,.32)':'rgba(255,80,80,.22)')+';border-radius:6px;padding:3px 10px;font-weight:900;color:'+(r.sH>r.sA?'#6eff9a':'#ff8080')+';font-size:18px;">'+r.sH+'</span>'
+       +'<span style="color:rgba(255,255,255,.25);font-weight:900;padding:0 3px;">-</span>'
+       +'<span style="background:'+(r.sA>r.sH?'rgba(80,200,100,.32)':'rgba(255,80,80,.22)')+';border-radius:6px;padding:3px 10px;font-weight:900;color:'+(r.sA>r.sH?'#6eff9a':'#ff8080')+';font-size:18px;">'+r.sA+'</span>'
+      :'<span style="color:rgba(255,255,255,.18);font-size:16px;padding:0 6px;">🆚</span>';
+
+    h+='<div id="mc'+m.id+'" class="card" style="margin-bottom:9px;overflow:hidden;border-color:'+(m.played?'rgba(100,255,150,.55)':'rgba(255,200,100,.28)')+';">';
+    h+='<div onclick="toggleMatch('+m.id+')" style="padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;">';
+    h+='<span style="background:rgba(255,220,80,.18);color:#ffe066;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:800;flex-shrink:0;">#'+(idx+1)+'</span>';
+    h+='<div style="flex:1;display:flex;align-items:center;gap:7px;justify-content:flex-end;min-width:0;">';
+    h+='<span style="font-size:12px;font-weight:800;color:'+home.color+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(home.name)+'</span>'+logoEl(home,32);
+    h+='</div><div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">'+scoreHtml+'</div>';
+    h+='<div style="flex:1;display:flex;align-items:center;gap:7px;min-width:0;">'+logoEl(away,32);
+    h+='<span style="font-size:12px;font-weight:800;color:'+away.color+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(away.name)+'</span>';
+    h+='</div><span style="color:rgba(255,255,255,.3);font-size:12px;flex-shrink:0;">'+(isOpen?'▲':'▼')+'</span>';
+    h+='</div>'; // end header row
+
+    if(isOpen){
+      var resColor=r?(r.sH===r.sA?'#ffe066':'#6eff9a'):'#6eff9a';
+      var resText=r?(r.sH===r.sA?'🤝 Pareggio 1-1':'🏐 Vince '+(r.sH>r.sA?home.name:away.name)+'!'):'';
+      h+='<div style="padding:4px 14px 14px;border-top:1px solid rgba(255,255,255,.1);">';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">';
+      [{l:'⏱️ Set 1 (5 min)',fh:'s1h',fa:'s1a'},{l:'🔄 Set 2 (cambio)',fh:'s2h',fa:'s2a'}].forEach(function(s){
+        h+='<div style="background:rgba(0,0,0,.52);border-radius:10px;padding:10px 12px;">';
+        h+='<div style="font-size:10px;color:#ffe066;font-weight:700;margin-bottom:8px;text-align:center;">'+s.l+'</div>';
+        h+='<div style="display:flex;align-items:center;justify-content:center;gap:10px;">';
+        h+='<div style="text-align:center;"><div style="font-size:9px;color:'+home.color+';margin-bottom:3px;font-weight:700;">'+esc(home.name.split(' ')[0])+'</div>';
+        h+='<input class="score-inp" type="number" min="0" max="99" value="'+esc(m[s.fh])+'" data-mid="'+m.id+'" data-fld="'+s.fh+'"></div>';
+        h+='<span style="color:rgba(255,255,255,.2);font-size:18px;">·</span>';
+        h+='<div style="text-align:center;"><div style="font-size:9px;color:'+away.color+';margin-bottom:3px;font-weight:700;">'+esc(away.name.split(' ')[0])+'</div>';
+        h+='<input class="score-inp" type="number" min="0" max="99" value="'+esc(m[s.fa])+'" data-mid="'+m.id+'" data-fld="'+s.fa+'"></div>';
+        h+='</div></div>';
+      });
+      h+='</div>';
+      h+='<div id="res'+m.id+'" style="margin-top:10px;text-align:center;font-size:13px;font-weight:800;color:'+resColor+';">'+resText+'</div>';
+      h+='</div>';
     }
+    h+='</div>';
+  });
+  return h;
+}
 
-    function shuffle(arr) {
-      const a = [...arr];
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
+/* ── CLASSIFICA ── */
+function buildCls(){
+  var st=standings();
+  var h='<div class="card" style="overflow:hidden;">';
+  h+='<div style="display:grid;grid-template-columns:28px 40px 1fr 28px 28px 28px 38px 34px;gap:3px;padding:10px 12px;background:rgba(255,220,80,.14);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#ffe066;">';
+  h+='<div>#</div><div></div><div>Squadra</div><div style="text-align:center;">G</div><div style="text-align:center;">V</div><div style="text-align:center;">P</div><div style="text-align:center;">Set</div><div style="text-align:center;">PTS</div>';
+  h+='</div>';
+  st.forEach(function(s,idx){
+    var t=getTeam(s.id);if(!t)return;
+    var medal=idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':(idx+1)+'';
+    var mColor=idx===0?'#ffd700':idx===1?'#c0c0c0':idx===2?'#cd7f32':'#888';
+    h+='<div style="display:grid;grid-template-columns:28px 40px 1fr 28px 28px 28px 38px 34px;gap:3px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.07);background:'+(idx===0?'rgba(255,215,0,.08)':'transparent')+';align-items:center;">';
+    h+='<div style="font-weight:900;font-size:'+(idx<3?14:12)+'px;color:'+mColor+';">'+medal+'</div>';
+    h+=logoEl(t,30);
+    h+='<div style="font-size:12px;font-weight:700;color:'+t.color+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(t.name)+'</div>';
+    [s.G,s.V,s.P].forEach(function(v){h+='<div style="text-align:center;font-size:12px;color:rgba(255,255,255,.8);">'+v+'</div>';});
+    h+='<div style="text-align:center;font-size:11px;color:rgba(255,255,255,.45);">'+s.SV+'-'+s.SP+'</div>';
+    h+='<div style="text-align:center;font-size:16px;font-weight:900;color:#ffe066;">'+s.Pts+'</div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  h+='<div class="card" style="margin-top:10px;padding:12px 14px;font-size:11px;color:rgba(255,255,255,.45);line-height:1.9;">';
+  h+='<b style="color:#ffe066;">Punti:</b> Vittoria 2-0 = <b style="color:#fff;">3pt</b> · Pareggio 1-1 = <b style="color:#fff;">2pt</b> a testa · Sconfitta 0-2 = <b style="color:#fff;">1pt</b><br>';
+  h+='<b style="color:#ffe066;">Spareggio:</b> differenza set, poi punti totali</div>';
+  return h;
+}
+
+/* ── SQUADRE ── */
+function buildSqd(){
+  var h='';
+  teams.forEach(function(team){
+    var isOpen=openTeam===team.id;
+    h+='<div class="card" style="margin-bottom:10px;overflow:hidden;border-color:'+(isOpen?team.color:'rgba(255,200,100,.28)')+';">';
+    h+='<div onclick="toggleTeam('+team.id+')" style="padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;">';
+    h+=logoEl(team,44);
+    h+='<div style="flex:1;"><div style="font-size:15px;font-weight:800;color:'+team.color+';">'+esc(team.name)+'</div>';
+    h+='<div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;">'+team.members.filter(function(m){return m!=='TBD';}).length+' confermati · '+team.members.length+' totali</div>';
+    h+='</div><div style="color:rgba(255,255,255,.35);">'+(isOpen?'▲':'▼')+'</div></div>';
+
+    if(isOpen){
+      h+='<div style="padding:0 16px 16px;border-top:1px solid '+team.color+'55;">';
+
+      /* logo editor */
+      h+='<div style="margin-top:14px;margin-bottom:16px;">';
+      h+='<div style="font-size:11px;color:#ffe066;font-weight:700;margin-bottom:8px;">🖼️ Logo squadra (URL)</div>';
+      h+='<div style="display:flex;align-items:center;gap:10px;">'+logoEl(team,52);
+      h+='<div style="flex:1;">';
+      if(editLogo===team.id){
+        h+='<input id="logo-inp" class="inp" type="text" value="'+esc(logoInput)+'" placeholder="https://esempio.com/logo.png" style="margin-bottom:8px;">';
+        h+='<div style="display:flex;gap:8px;"><button class="btn-gold" onclick="saveLogo('+team.id+')" style="flex:1;padding:7px;font-size:12px;">✓ Salva</button>';
+        h+='<button class="btn-red" onclick="cancelLogo()" style="padding:7px 12px;font-size:12px;">✕</button></div>';
+      } else {
+        h+='<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+        h+='<button onclick="startEditLogo('+team.id+')" style="padding:7px 14px;background:rgba(255,220,80,.18);border:1px solid rgba(255,220,80,.4);border-radius:8px;color:#ffe066;font-weight:700;font-size:11px;cursor:pointer;">'+(team.logo?'✏️ Cambia URL':'➕ Aggiungi URL')+'</button>';
+        if(team.logo)h+='<button onclick="clearLogo('+team.id+')" style="padding:7px 12px;background:rgba(255,80,80,.22);border:1px solid rgba(255,80,80,.3);border-radius:8px;color:#ff8080;font-weight:700;font-size:11px;cursor:pointer;">🗑️</button>';
+        h+='</div>';
       }
-      return a;
-    }
+      h+='</div></div></div>';
 
-    function matchResult(m) {
-      const [s1h,s1a,s2h,s2a] = [m.s1h,m.s1a,m.s2h,m.s2a].map(Number);
-      if ([s1h,s1a,s2h,s2a].some(isNaN)) return null;
-      return {
-        sH: (s1h>s1a?1:0)+(s2h>s2a?1:0),
-        sA: (s1a>s1h?1:0)+(s2a>s2h?1:0),
-      };
-    }
-
-    function standings(matches, teams) {
-      const st = {};
-      teams.forEach(t => { st[t.id]={id:t.id,G:0,V:0,P:0,SV:0,SP:0,Pts:0}; });
-      matches.forEach(m => {
-        if (!m.played) return;
-        const r = matchResult(m); if (!r) return;
-        st[m.home].G++; st[m.away].G++;
-        st[m.home].SV+=r.sH; st[m.home].SP+=r.sA;
-        st[m.away].SV+=r.sA; st[m.away].SP+=r.sH;
-        if (r.sH>r.sA) { st[m.home].V++; st[m.home].Pts+=3; st[m.away].P++; st[m.away].Pts+=1; }
-        else if (r.sA>r.sH) { st[m.away].V++; st[m.away].Pts+=3; st[m.home].P++; st[m.home].Pts+=1; }
-        else { st[m.home].Pts+=2; st[m.away].Pts+=2; }
+      /* members editor */
+      h+='<div style="font-size:11px;color:#ffe066;font-weight:700;margin-bottom:8px;">👥 Giocatori</div>';
+      team.members.forEach(function(member,i){
+        var isEditingThis=editMember&&editMember.tid===team.id&&editMember.idx===i;
+        h+='<div style="margin-bottom:6px;">';
+        if(isEditingThis){
+          h+='<div style="display:flex;gap:6px;">';
+          h+='<input id="mem-inp" class="inp" type="text" value="'+esc(memberInput)+'" placeholder="Nome giocatore" style="flex:1;">';
+          h+='<button class="btn-gold" onclick="saveMember('+team.id+','+i+')" style="padding:0 12px;">✓</button>';
+          h+='<button class="btn-red" onclick="cancelMember()" style="padding:0 10px;">✕</button>';
+          h+='</div>';
+        } else {
+          h+='<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(0,0,0,.45);border-radius:8px;">';
+          h+='<span style="color:'+team.color+';font-size:10px;">●</span>';
+          h+='<span style="font-size:13px;flex:1;color:'+(member==='TBD'?'rgba(255,255,255,.28)':'rgba(255,255,255,.9)')+';font-style:'+(member==='TBD'?'italic':'normal')+';">'+(member==='TBD'?'⏳ Da definire':esc(member))+'</span>';
+          h+='<button onclick="startEditMember('+team.id+','+i+')" style="padding:3px 8px;background:rgba(255,220,80,.2);border:none;border-radius:6px;color:#ffe066;font-size:11px;cursor:pointer;">✏️</button>';
+          h+='<button onclick="removeMember('+team.id+','+i+')" style="padding:3px 8px;background:rgba(255,80,80,.2);border:none;border-radius:6px;color:#ff8080;font-size:11px;cursor:pointer;">✕</button>';
+          h+='</div>';
+        }
+        h+='</div>';
       });
-      return Object.values(st).sort((a,b)=>b.Pts-a.Pts||(b.SV-b.SP)-(a.SV-a.SP));
+      h+='<button onclick="addMember('+team.id+')" style="margin-top:6px;width:100%;padding:9px;background:rgba(255,220,80,.08);border:1.5px dashed rgba(255,220,80,.4);border-radius:8px;color:#ffe066;font-weight:700;font-size:12px;cursor:pointer;">+ Aggiungi giocatore</button>';
+      h+='</div>';
     }
+    h+='</div>';
+  });
+  return h;
+}
 
-    function probabilities(odds, teams) {
-      let tot = 0;
-      const imp = {};
-      teams.forEach(t => {
-        const q = parseFloat(odds[t.id]);
-        imp[t.id] = (q>0) ? 1/q : 0;
-        tot += imp[t.id];
-      });
-      return teams
-        .map(t => ({ id: t.id, prob: tot>0 ? (imp[t.id]/tot)*100 : 0 }))
-        .sort((a,b)=>b.prob-a.prob);
-    }
+/* ── SCOMMESSE ── */
+function buildBet(){
+  var h='<div class="card" style="padding:16px;margin-bottom:12px;">';
+  h+='<div style="font-size:14px;font-weight:800;color:#ffe066;margin-bottom:4px;">💰 Quote di Vittoria Torneo</div>';
+  h+='<div style="font-size:11px;color:rgba(255,255,255,.42);margin-bottom:14px;line-height:1.6;">Quota decimale: <b style="color:#ccc;">1.5</b> = favorita &nbsp;·&nbsp; <b style="color:#ccc;">4.0</b> = outsider. Il grafico si aggiorna in tempo reale.</div>';
+  h+='<div style="display:grid;gap:8px;">';
+  teams.forEach(function(t){
+    h+='<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(0,0,0,.45);border-radius:10px;">';
+    h+=logoEl(t,32);
+    h+='<span style="font-size:13px;font-weight:700;color:'+t.color+';flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(t.name)+'</span>';
+    h+='<span style="font-size:11px;color:rgba(255,255,255,.3);flex-shrink:0;">quota</span>';
+    h+='<input type="number" min="1.01" step="0.05" value="'+esc(odds[t.id])+'" data-oid="'+t.id+'" placeholder="—" style="width:68px;text-align:center;background:rgba(0,0,0,.65);border:2px solid '+t.color+'88;border-radius:8px;color:#fff;font-size:17px;font-weight:800;padding:5px 0;outline:none;">';
+    h+='</div>';
+  });
+  h+='</div></div>';
+  h+='<div class="card" style="padding:16px;margin-bottom:12px;">';
+  h+='<div style="font-size:14px;font-weight:800;color:#ffe066;margin-bottom:16px;">📊 Probabilità Implicita di Vittoria</div>';
+  h+='<div id="prob-chart">'+buildChart()+'</div>';
+  h+='</div>';
+  h+='<div id="bet-analysis">'+buildAnalysis()+'</div>';
+  return h;
+}
 
-    /* ── small reusable pieces ── */
-    function Logo({ logo, name, color, size=36 }) {
-      const [err, setErr] = useState(false);
-      if (logo && !err)
-        return <img src={logo} alt={name} onError={()=>setErr(true)}
-                 style={{width:size,height:size,borderRadius:"50%",objectFit:"cover",
-                         border:`2px solid ${color}`,flexShrink:0}} />;
-      return (
-        <div style={{width:size,height:size,borderRadius:"50%",background:`${color}44`,
-                     border:`2px solid ${color}`,display:"flex",alignItems:"center",
-                     justifyContent:"center",fontSize:Math.round(size*.38),color,
-                     fontWeight:900,flexShrink:0,userSelect:"none"}}>
-          {name.charAt(0).toUpperCase()}
-        </div>
-      );
-    }
+function buildChart(){
+  var raw=teams.map(function(t){var q=parseFloat(odds[t.id]);return{t:t,p:q>0?1/q:0};});
+  var total=raw.reduce(function(s,x){return s+x.p;},0);
+  if(!total)return '<div style="text-align:center;color:rgba(255,255,255,.3);font-size:13px;padding:24px 0;">Inserisci le quote per vedere il grafico in tempo reale</div>';
+  var rows=raw.map(function(x){return{t:x.t,pct:x.p/total*100};}).sort(function(a,b){return b.pct-a.pct;});
+  var h='';
+  rows.forEach(function(x){
+    h+='<div style="margin-bottom:14px;">';
+    h+='<div style="display:flex;align-items:center;gap:9px;margin-bottom:5px;">';
+    h+=logoEl(x.t,26);
+    h+='<span style="font-size:13px;font-weight:700;color:'+x.t.color+';flex:1;">'+esc(x.t.name)+'</span>';
+    h+='<span style="font-size:15px;font-weight:900;color:#ffe066;min-width:52px;text-align:right;">'+x.pct.toFixed(1)+'%</span>';
+    h+='</div>';
+    h+='<div style="height:22px;background:rgba(0,0,0,.55);border-radius:11px;overflow:hidden;">';
+    h+='<div class="bar-fill" style="height:100%;width:'+x.pct+'%;background:linear-gradient(90deg,'+x.t.color+'88,'+x.t.color+');border-radius:11px;box-shadow:0 0 10px '+x.t.color+'55;"></div>';
+    h+='</div></div>';
+  });
+  return h;
+}
 
-    function NumInput({ value, onChange, placeholder, style={} }) {
-      return <input type="number" min="0" max="99" value={value}
-               onChange={e=>onChange(e.target.value)} placeholder={placeholder}
-               style={{textAlign:"center",background:"rgba(0,0,0,0.65)",
-                       border:"2px solid rgba(255,200,100,0.4)",borderRadius:8,
-                       color:"#fff",fontWeight:900,outline:"none",...style}} />;
-    }
+function buildAnalysis(){
+  var raw=teams.map(function(t){var q=parseFloat(odds[t.id]);return{t:t,p:q>0?1/q:0};});
+  var total=raw.reduce(function(s,x){return s+x.p;},0);
+  if(!total)return '';
+  var sorted=raw.map(function(x){return{t:x.t,pct:x.p/total*100};}).sort(function(a,b){return b.pct-a.pct;});
+  var fav=sorted[0],und=sorted[sorted.length-1];
+  var margin=((total-1)*100).toFixed(1);
+  var h='<div class="card" style="padding:14px 16px;">';
+  h+='<div style="font-size:13px;font-weight:800;color:#ffe066;margin-bottom:10px;">🎯 Analisi Quote</div>';
+  h+='<div style="display:grid;gap:8px;margin-bottom:12px;">';
+  [['🏆 Favorita',fav.t.name,fav.t.color,fav.pct.toFixed(1)+'%'],
+   ['😅 Outsider',und.t.name,und.t.color,und.pct.toFixed(1)+'%'],
+   ['📈 Margine banco',margin+'%','#aaa','sovra-prob. totale'],
+  ].forEach(function(row){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(0,0,0,.42);border-radius:8px;">';
+    h+='<span style="font-size:12px;color:rgba(255,255,255,.5);">'+row[0]+'</span>';
+    h+='<span style="font-size:13px;font-weight:800;color:'+row[2]+';"><span style="color:#ffe066;">'+esc(row[1])+'</span> <span style="color:rgba(255,255,255,.55);font-size:11px;">('+row[3]+')</span></span>';
+    h+='</div>';
+  });
+  h+='</div>';
+  h+='<div style="font-size:11px;color:rgba(255,255,255,.32);line-height:1.7;">Probabilità implicita = <b style="color:rgba(255,255,255,.55);">1 ÷ quota</b>, normalizzata al 100%.</div>';
+  h+='</div>';
+  return h;
+}
 
-    /* ═══════════════════════════════════════════════════════════════
-       MAIN APP
-    ═══════════════════════════════════════════════════════════════ */
-    function App() {
+/* ═══ AFTER RENDER (event listeners & patches) ═════════════════ */
+function afterRender(){
+  /* logo error fallback */
+  document.querySelectorAll('img[data-tl]').forEach(function(img){
+    img.onerror=function(){
+      var tid=parseInt(this.dataset.tl),sz=parseInt(this.dataset.sz);
+      var t=getTeam(tid);if(!t)return;
+      var init=t.name.charAt(0).toUpperCase();
+      var div=document.createElement('div');
+      div.style.cssText='width:'+sz+'px;height:'+sz+'px;border-radius:50%;flex-shrink:0;background:'+t.color+'33;border:2px solid '+t.color+';display:inline-flex;align-items:center;justify-content:center;font-size:'+Math.round(sz*.38)+'px;color:'+t.color+';font-weight:900;vertical-align:middle;';
+      div.textContent=init;
+      this.parentNode.replaceChild(div,this);
+    };
+  });
 
-      /* ── persisted state ── */
-      const load = (key, fallback) => { try { const s=localStorage.getItem(key); return s?JSON.parse(s):fallback; } catch{return fallback;} };
+  /* score inputs — partial update, no full re-render */
+  document.querySelectorAll('input[data-mid]').forEach(function(inp){
+    inp.addEventListener('input',function(){
+      var mid=parseInt(this.dataset.mid),fld=this.dataset.fld;
+      var m=matches.find(function(x){return x.id===mid;});
+      if(!m)return;
+      m[fld]=this.value;
+      m.played=['s1h','s1a','s2h','s2a'].every(function(f){return m[f]!==''&&!isNaN(+m[f]);});
+      /* patch card border */
+      var card=document.getElementById('mc'+mid);
+      if(card)card.style.borderColor=m.played?'rgba(100,255,150,.55)':'rgba(255,200,100,.28)';
+      /* patch result message */
+      var resEl=document.getElementById('res'+mid);
+      if(resEl){
+        var r=m.played?matchResult(m):null;
+        if(r){
+          var home=getTeam(m.home),away=getTeam(m.away);
+          resEl.style.color=r.sH===r.sA?'#ffe066':'#6eff9a';
+          resEl.textContent=r.sH===r.sA?'🤝 Pareggio 1-1':'🏐 Vince '+(r.sH>r.sA?home.name:away.name)+'!';
+        } else {
+          resEl.textContent='';
+        }
+      }
+    });
+  });
 
-      const [teams,   setTeams]   = useState(()=>load('bv_teams',   INITIAL_TEAMS));
-      const [matches, setMatches] = useState(()=>load('bv_matches', buildMatches(INITIAL_TEAMS)));
-      const [odds,    setOdds]    = useState(()=>load('bv_odds',    {}));
+  /* odds inputs — patch chart only */
+  document.querySelectorAll('input[data-oid]').forEach(function(inp){
+    inp.addEventListener('input',function(){
+      odds[parseInt(this.dataset.oid)]=this.value;
+      var c=document.getElementById('prob-chart');if(c)c.innerHTML=buildChart();
+      var a=document.getElementById('bet-analysis');if(a)a.innerHTML=buildAnalysis();
+    });
+  });
 
-      useEffect(()=>{ try{localStorage.setItem('bv_teams',   JSON.stringify(teams));}   catch{} }, [teams]);
-      useEffect(()=>{ try{localStorage.setItem('bv_matches', JSON.stringify(matches));} catch{} }, [matches]);
-      useEffect(()=>{ try{localStorage.setItem('bv_odds',    JSON.stringify(odds));}    catch{} }, [odds]);
+  /* logo text input */
+  var li=document.getElementById('logo-inp');
+  if(li){
+    li.addEventListener('input',function(){logoInput=this.value;});
+    li.addEventListener('keydown',function(e){if(e.key==='Enter')saveLogo(editLogo);});
+    li.focus();var len=li.value.length;li.setSelectionRange(len,len);
+  }
 
-      /* ── UI state ── */
-      const [tab,       setTab]       = useState("calendario");
-      const [openMatch, setOpenMatch] = useState(null);
-      const [openTeam,  setOpenTeam]  = useState(null);
-      const [editLogo,  setEditLogo]  = useState(null);
-      const [logoVal,   setLogoVal]   = useState("");
-      const [editMbr,   setEditMbr]   = useState(null);   // {teamId,idx}
-      const [mbrVal,    setMbrVal]    = useState("");
+  /* member text input */
+  var mi=document.getElementById('mem-inp');
+  if(mi){
+    mi.addEventListener('input',function(){memberInput=this.value;});
+    mi.addEventListener('keydown',function(e){if(e.key==='Enter'&&editMember)saveMember(editMember.tid,editMember.idx);});
+    mi.focus();var len=mi.value.length;mi.setSelectionRange(len,len);
+  }
+}
 
-      const byId = useCallback(id=>teams.find(t=>t.id===id), [teams]);
+/* ═══ ACTIONS ═══════════════════════════════════════════════════ */
+function setTab(t)      {tab=t;openMatch=null;render();}
+function toggleMatch(id){openMatch=openMatch===id?null:id;render();}
+function toggleTeam(id) {openTeam=openTeam===id?null:id;editLogo=null;editMember=null;logoInput='';memberInput='';render();}
+function doRandomize()  {matches=shuffle(matches).map(function(m,i){return Object.assign({},m,{id:i+1});});render();}
 
-      /* ── match helpers ── */
-      const randomize = ()=> setMatches(prev=>shuffle(prev).map((m,i)=>({...m,id:i+1})));
+function startEditLogo(tid){editLogo=tid;logoInput=teams.find(function(t){return t.id===tid;}).logo;render();}
+function cancelLogo()      {editLogo=null;logoInput='';render();}
+function saveLogo(tid)     {teams=teams.map(function(t){return t.id===tid?Object.assign({},t,{logo:logoInput.trim()}):t;});editLogo=null;logoInput='';render();}
+function clearLogo(tid)    {teams=teams.map(function(t){return t.id===tid?Object.assign({},t,{logo:''}):t;});render();}
 
-      const setScore = (mid, field, val) =>
-        setMatches(prev=>prev.map(m=>{
-          if(m.id!==mid) return m;
-          const u={...m,[field]:val};
-          u.played=[u.s1h,u.s1a,u.s2h,u.s2a].every(v=>v!==""&&!isNaN(Number(v)));
-          return u;
-        }));
+function startEditMember(tid,idx){
+  var t=teams.find(function(x){return x.id===tid;});
+  editMember={tid:tid,idx:idx};
+  memberInput=t.members[idx]==='TBD'?'':t.members[idx];
+  render();
+}
+function cancelMember(){editMember=null;memberInput='';render();}
+function saveMember(tid,idx){
+  teams=teams.map(function(t){
+    if(t.id!==tid)return t;
+    var m=t.members.slice();m[idx]=memberInput.trim()||'TBD';
+    return Object.assign({},t,{members:m});
+  });
+  editMember=null;memberInput='';render();
+}
+function removeMember(tid,idx){
+  editMember=null;memberInput='';
+  teams=teams.map(function(t){
+    if(t.id!==tid)return t;
+    return Object.assign({},t,{members:t.members.filter(function(_,i){return i!==idx;})});
+  });
+  render();
+}
+function addMember(tid){
+  teams=teams.map(function(t){
+    if(t.id!==tid)return t;
+    return Object.assign({},t,{members:t.members.concat('TBD')});
+  });
+  render();
+}
 
-      /* ── logo helpers ── */
-      const saveLogo = teamId => {
-        setTeams(prev=>prev.map(t=>t.id===teamId?{...t,logo:logoVal.trim()}:t));
-        setEditLogo(null); setLogoVal("");
-      };
-
-      /* ── member helpers ── */
-      const saveMbr = (teamId, idx) => {
-        setTeams(prev=>prev.map(t=>{
-          if(t.id!==teamId) return t;
-          const members=[...t.members]; members[idx]=mbrVal.trim()||"";
-          return {...t,members};
-        }));
-        setEditMbr(null);
-      };
-      const addMbr = teamId =>
-        setTeams(prev=>prev.map(t=>t.id===teamId?{...t,members:[...t.members,""]}:t));
-      const delMbr = (teamId,idx) =>
-        setTeams(prev=>prev.map(t=>t.id!==teamId?t:{...t,members:t.members.filter((_,i)=>i!==idx)}));
-
-      /* ── reset ── */
-      const reset = ()=>{
-        if(!window.confirm("Resettare tutto il torneo?")) return;
-        setTeams(INITIAL_TEAMS); setMatches(buildMatches(INITIAL_TEAMS)); setOdds({});
-        localStorage.clear();
-      };
-
-      /* ── derived data ── */
-      const table  = standings(matches, teams);
-      const probs  = probabilities(odds, teams);
-      const played = matches.filter(m=>m.played).length;
-
-      /* ── style helpers ── */
-      const card = (ex={})=>({
-        background:"rgba(0,0,0,0.58)",
-        border:"1.5px solid rgba(255,200,100,0.22)",
-        borderRadius:14, ...ex
-      });
-      const btn = (bg,color="#fff",ex={})=>({
-        padding:"7px 13px", background:bg, border:"none",
-        borderRadius:20, color, fontWeight:800, fontSize:12,
-        cursor:"pointer", ...ex
-      });
-
-      /* ── TABS ── */
-      const TABS=[["calendario","📅 Partite"],["classifica","🏆 Classifica"],["squadre","👥 Squadre"],["scommesse","🎲 Scommesse"]];
-
-      return (
-        <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#8b3a12 0%,#b5651d 30%,#c8882a 55%,#9a5015 80%,#6b2f0e 100%)",fontFamily:"'Trebuchet MS',sans-serif",color:"#fff"}}>
-
-          {/* ── HEADER ── */}
-          <div style={{background:"linear-gradient(180deg,rgba(0,55,135,0.97) 0%,rgba(0,100,200,0.88) 100%)",padding:"22px 20px 18px",textAlign:"center",borderBottom:"4px solid rgba(255,220,80,0.7)"}}>
-            <div style={{fontSize:11,letterSpacing:5,color:"#ffe066",textTransform:"uppercase"}}>🏖️ Torneo</div>
-            <div style={{fontSize:26,fontWeight:900,letterSpacing:1,textShadow:"0 2px 10px rgba(0,0,0,0.5)"}}>BEACH VOLLEY 🏐</div>
-            <div style={{fontSize:12,color:"#ffe066",fontStyle:"italic",marginTop:2}}>Girone All'Italiana · 6 Squadre · 15 Partite</div>
-            <div style={{maxWidth:280,margin:"12px auto 0"}}>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"rgba(255,255,255,0.55)",marginBottom:4}}>
-                <span>{played} giocate</span><span>{matches.length-played} rimaste</span>
-              </div>
-              <div style={{height:6,background:"rgba(255,255,255,0.18)",borderRadius:3}}>
-                <div style={{height:"100%",width:`${(played/matches.length)*100}%`,background:"linear-gradient(90deg,#ffe066,#ff9500)",borderRadius:3,transition:"width .5s"}}/>
-              </div>
-            </div>
-          </div>
-
-          {/* ── FORMAT STRIP ── */}
-          <div style={{background:"rgba(0,0,0,0.55)",padding:"8px 12px",display:"flex",justifyContent:"center",gap:18,flexWrap:"wrap"}}>
-            {[["⏱️ Set 1","5 min"],["🔄 Pausa","2 min"],["⏱️ Set 2","5 min"],["📋 Totale","~15 min"]].map(([l,v])=>(
-              <div key={l} style={{textAlign:"center",fontSize:12}}>
-                <div style={{color:"#ffe066",fontWeight:700}}>{l}</div>
-                <div style={{color:"rgba(255,255,255,0.65)"}}>{v}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* ── TABS ── */}
-          <div style={{display:"flex",justifyContent:"center",gap:6,padding:"12px 10px 0",flexWrap:"wrap"}}>
-            {TABS.map(([key,label])=>(
-              <button key={key} onClick={()=>setTab(key)}
-                style={{...btn(tab===key?"#ffe066":"rgba(0,0,0,0.45)",tab===key?"#333":"#fff"),
-                        border:`2px solid ${tab===key?"#ffe066":"rgba(255,255,255,0.2)"}`,
-                        borderRadius:20,transition:"all .2s"}}>
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* ── CONTENT ── */}
-          <div style={{maxWidth:640,margin:"0 auto",padding:"14px 12px 70px"}}>
-
-            {/* ══ CALENDARIO ══ */}
-            {tab==="calendario" && (
-              <div>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                  <div style={{fontSize:12,color:"rgba(255,255,255,0.5)"}}>Tocca una partita per i punteggi</div>
-                  <button onClick={randomize} style={{...btn("linear-gradient(135deg,#ffe066,#ff9500)","#333")}}>🔀 Randomizza</button>
-                </div>
-
-                {matches.map((m,idx)=>{
-                  const H=byId(m.home), A=byId(m.away);
-                  const r=m.played?matchResult(m):null;
-                  const open=openMatch===m.id;
-                  return (
-                    <div key={m.id} style={{...card({marginBottom:9,overflow:"hidden",
-                      borderColor:m.played?"rgba(80,230,120,0.45)":"rgba(255,200,100,0.22)"})}}>
-
-                      {/* row */}
-                      <div onClick={()=>setOpenMatch(open?null:m.id)}
-                        style={{padding:"11px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:8}}>
-                        <span style={{background:"rgba(255,220,80,0.22)",color:"#ffe066",borderRadius:6,padding:"2px 7px",fontSize:10,fontWeight:800,flexShrink:0}}>#{idx+1}</span>
-
-                        {/* home */}
-                        <div style={{flex:1,display:"flex",alignItems:"center",gap:7,justifyContent:"flex-end",minWidth:0}}>
-                          <span style={{fontSize:12,fontWeight:800,color:H.color,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{H.name}</span>
-                          <Logo logo={H.logo} name={H.name} color={H.color} size={30}/>
-                        </div>
-
-                        {/* score */}
-                        <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
-                          {r ? (
-                            <>
-                              <span style={{background:r.sH>r.sA?"rgba(80,210,100,0.4)":"rgba(255,70,70,0.3)",borderRadius:6,padding:"3px 10px",fontWeight:900,color:r.sH>r.sA?"#6eff9a":"#ff8080",fontSize:18}}>{r.sH}</span>
-                              <span style={{color:"rgba(255,255,255,0.25)",fontWeight:900}}>-</span>
-                              <span style={{background:r.sA>r.sH?"rgba(80,210,100,0.4)":"rgba(255,70,70,0.3)",borderRadius:6,padding:"3px 10px",fontWeight:900,color:r.sA>r.sH?"#6eff9a":"#ff8080",fontSize:18}}>{r.sA}</span>
-                            </>
-                          ) : <span style={{color:"rgba(255,255,255,0.18)",fontSize:16,padding:"0 6px"}}>🆚</span>}
-                        </div>
-
-                        {/* away */}
-                        <div style={{flex:1,display:"flex",alignItems:"center",gap:7,minWidth:0}}>
-                          <Logo logo={A.logo} name={A.name} color={A.color} size={30}/>
-                          <span style={{fontSize:12,fontWeight:800,color:A.color,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{A.name}</span>
-                        </div>
-
-                        <span style={{color:"rgba(255,255,255,0.28)",fontSize:12,flexShrink:0}}>{open?"▲":"▼"}</span>
-                      </div>
-
-                      {/* expanded */}
-                      {open && (
-                        <div style={{padding:"4px 14px 14px",borderTop:"1px solid rgba(255,255,255,0.1)"}}>
-                          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:10}}>
-                            {[{label:"⏱️ Set 1  (5 min)",fH:"s1h",fA:"s1a"},{label:"🔄 Set 2  (cambio campo)",fH:"s2h",fA:"s2a"}].map(({label,fH,fA})=>(
-                              <div key={label} style={{background:"rgba(0,0,0,0.45)",borderRadius:10,padding:"10px 12px"}}>
-                                <div style={{fontSize:10,color:"#ffe066",fontWeight:700,marginBottom:8,textAlign:"center"}}>{label}</div>
-                                <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
-                                  <div style={{textAlign:"center"}}>
-                                    <div style={{fontSize:9,color:H.color,marginBottom:3,fontWeight:700,overflow:"hidden",maxWidth:58,textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{H.name.split(" ")[0]}</div>
-                                    <NumInput value={m[fH]} onChange={v=>setScore(m.id,fH,v)} style={{width:46,fontSize:22,padding:"5px 0"}}/>
-                                  </div>
-                                  <span style={{color:"rgba(255,255,255,0.2)"}}>·</span>
-                                  <div style={{textAlign:"center"}}>
-                                    <div style={{fontSize:9,color:A.color,marginBottom:3,fontWeight:700,overflow:"hidden",maxWidth:58,textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{A.name.split(" ")[0]}</div>
-                                    <NumInput value={m[fA]} onChange={v=>setScore(m.id,fA,v)} style={{width:46,fontSize:22,padding:"5px 0"}}/>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          {m.played&&r&&(
-                            <div style={{marginTop:10,textAlign:"center",fontSize:13,fontWeight:800,color:r.sH===r.sA?"#ffe066":"#6eff9a"}}>
-                              {r.sH===r.sA?"🤝 Pareggio 1-1":`🏐 Vince ${r.sH>r.sA?H.name:A.name}!`}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* ══ CLASSIFICA ══ */}
-            {tab==="classifica" && (
-              <div>
-                <div style={{...card({overflow:"hidden"})}}>
-                  <div style={{display:"grid",gridTemplateColumns:"26px 36px 1fr 26px 26px 26px 34px 30px",gap:2,padding:"10px 12px",background:"rgba(255,220,80,0.18)",fontSize:10,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:"#ffe066"}}>
-                    <div>#</div><div/>  <div>Squadra</div>
-                    <div style={{textAlign:"center"}}>G</div><div style={{textAlign:"center"}}>V</div><div style={{textAlign:"center"}}>P</div>
-                    <div style={{textAlign:"center"}}>Set</div><div style={{textAlign:"center"}}>Pt</div>
-                  </div>
-                  {table.map((s,idx)=>{
-                    const t=byId(s.id);
-                    const medal=idx===0?"🥇":idx===1?"🥈":idx===2?"🥉":`${idx+1}`;
-                    return (
-                      <div key={s.id} style={{display:"grid",gridTemplateColumns:"26px 36px 1fr 26px 26px 26px 34px 30px",gap:2,padding:"10px 12px",borderTop:"1px solid rgba(255,255,255,0.1)",background:idx===0?"rgba(255,215,0,0.1)":"transparent",alignItems:"center"}}>
-                        <div style={{fontWeight:900,fontSize:idx<3?14:12,color:idx===0?"#ffd700":idx===1?"#c0c0c0":idx===2?"#cd7f32":"#777"}}>{medal}</div>
-                        <Logo logo={t.logo} name={t.name} color={t.color} size={28}/>
-                        <div style={{fontSize:12,fontWeight:700,color:t.color,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.name}</div>
-                        {[s.G,s.V,s.P].map((v,i)=><div key={i} style={{textAlign:"center",fontSize:12,color:"rgba(255,255,255,0.8)"}}>{v}</div>)}
-                        <div style={{textAlign:"center",fontSize:10,color:"rgba(255,255,255,0.45)"}}>{s.SV}-{s.SP}</div>
-                        <div style={{textAlign:"center",fontSize:16,fontWeight:900,color:"#ffe066"}}>{s.Pts}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{marginTop:10,padding:"12px 14px",...card({fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.8})}}>
-                  <b style={{color:"#ffe066"}}>Punti:</b> Vittoria 2-0 = <b style={{color:"#fff"}}>3pt</b> · Pareggio 1-1 = <b style={{color:"#fff"}}>2pt</b> a testa · Sconfitta 0-2 = <b style={{color:"#fff"}}>1pt</b>
-                </div>
-              </div>
-            )}
-
-            {/* ══ SQUADRE ══ */}
-            {tab==="squadre" && (
-              <div>
-                {teams.map(team=>(
-                  <div key={team.id} style={{...card({marginBottom:10,overflow:"hidden",borderColor:openTeam===team.id?team.color:"rgba(255,200,100,0.22)"})}}>
-
-                    {/* team header */}
-                    <div onClick={()=>setOpenTeam(openTeam===team.id?null:team.id)}
-                      style={{padding:"14px 16px",cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
-                      <Logo logo={team.logo} name={team.name} color={team.color} size={44}/>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:15,fontWeight:800,color:team.color}}>{team.name}</div>
-                        <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",marginTop:2}}>
-                          {team.members.filter(m=>m&&m!=="TBD").length} giocatori
-                        </div>
-                      </div>
-                      <div style={{color:"rgba(255,255,255,0.3)"}}>{openTeam===team.id?"▲":"▼"}</div>
-                    </div>
-
-                    {openTeam===team.id && (
-                      <div style={{padding:"0 16px 16px",borderTop:`1px solid ${team.color}55`}}>
-
-                        {/* ── LOGO ── */}
-                        <div style={{marginTop:14,marginBottom:16,padding:"12px",background:"rgba(0,0,0,0.35)",borderRadius:10}}>
-                          <div style={{fontSize:11,color:"#ffe066",fontWeight:700,marginBottom:10}}>🖼️ Logo squadra</div>
-                          <div style={{display:"flex",alignItems:"center",gap:12}}>
-                            <Logo logo={team.logo} name={team.name} color={team.color} size={52}/>
-                            <div style={{flex:1}}>
-                              {editLogo===team.id ? (
-                                <div>
-                                  <input type="text" value={logoVal} onChange={e=>setLogoVal(e.target.value)}
-                                    placeholder="https://sito.com/logo.png" autoFocus
-                                    style={{width:"100%",background:"rgba(0,0,0,0.65)",border:`2px solid ${team.color}88`,borderRadius:8,color:"#fff",fontSize:12,padding:"8px 10px",outline:"none",marginBottom:8}}/>
-                                  <div style={{display:"flex",gap:8}}>
-                                    <button onClick={()=>saveLogo(team.id)} style={{...btn(team.color),flex:1,padding:"7px",borderRadius:8}}>✓ Salva</button>
-                                    <button onClick={()=>{setEditLogo(null);setLogoVal("");}} style={{...btn("rgba(255,70,70,0.35)"),padding:"7px 12px",borderRadius:8}}>✕</button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                                  <button onClick={()=>{setEditLogo(team.id);setLogoVal(team.logo);}}
-                                    style={{padding:"7px 14px",background:"rgba(255,220,80,0.18)",border:`1px solid rgba(255,220,80,0.4)`,borderRadius:8,color:"#ffe066",fontWeight:700,fontSize:11,cursor:"pointer"}}>
-                                    {team.logo?"✏️ Cambia URL":"➕ Aggiungi URL"}
-                                  </button>
-                                  {team.logo&&<button onClick={()=>setTeams(prev=>prev.map(t=>t.id===team.id?{...t,logo:""}:t))}
-                                    style={{padding:"7px 10px",background:"rgba(255,70,70,0.18)",border:"1px solid rgba(255,70,70,0.35)",borderRadius:8,color:"#ff8080",fontWeight:700,fontSize:11,cursor:"pointer"}}>🗑️</button>}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* ── MEMBRI ── */}
-                        <div style={{padding:"12px",background:"rgba(0,0,0,0.35)",borderRadius:10}}>
-                          <div style={{fontSize:11,color:"#ffe066",fontWeight:700,marginBottom:10}}>👥 Giocatori</div>
-
-                          {team.members.length===0 && (
-                            <div style={{fontSize:12,color:"rgba(255,255,255,0.3)",fontStyle:"italic",paddingBottom:8}}>Nessun giocatore ancora</div>
-                          )}
-
-                          {team.members.map((mbr,i)=>(
-                            <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
-                              <span style={{color:team.color,fontSize:10,flexShrink:0}}>●</span>
-
-                              {editMbr&&editMbr.teamId===team.id&&editMbr.idx===i ? (
-                                <>
-                                  <input type="text" value={mbrVal} onChange={e=>setMbrVal(e.target.value)}
-                                    onKeyDown={e=>{if(e.key==="Enter")saveMbr(team.id,i);if(e.key==="Escape")setEditMbr(null);}}
-                                    autoFocus
-                                    style={{flex:1,background:"rgba(0,0,0,0.6)",border:`1.5px solid ${team.color}`,borderRadius:7,color:"#fff",fontSize:13,padding:"5px 8px",outline:"none"}}/>
-                                  <button onClick={()=>saveMbr(team.id,i)} style={{padding:"4px 10px",background:team.color,border:"none",borderRadius:6,color:"#fff",fontWeight:800,fontSize:11,cursor:"pointer"}}>✓</button>
-                                  <button onClick={()=>setEditMbr(null)} style={{padding:"4px 7px",background:"rgba(255,70,70,0.3)",border:"none",borderRadius:6,color:"#fff",fontSize:11,cursor:"pointer"}}>✕</button>
-                                </>
-                              ) : (
-                                <>
-                                  <span style={{flex:1,fontSize:13,color:mbr?"rgba(255,255,255,0.88)":"rgba(255,255,255,0.28)",fontStyle:mbr?"normal":"italic"}}>
-                                    {mbr||"⏳ Da definire"}
-                                  </span>
-                                  <button onClick={()=>{setEditMbr({teamId:team.id,idx:i});setMbrVal(mbr||"");}}
-                                    style={{padding:"3px 8px",background:"rgba(255,255,255,0.1)",border:"none",borderRadius:5,color:"rgba(255,255,255,0.5)",fontSize:12,cursor:"pointer"}}>✏️</button>
-                                  <button onClick={()=>delMbr(team.id,i)}
-                                    style={{padding:"3px 7px",background:"rgba(255,70,70,0.2)",border:"none",borderRadius:5,color:"#ff8080",fontSize:13,cursor:"pointer",fontWeight:900}}>×</button>
-                                </>
-                              )}
-                            </div>
-                          ))}
-
-                          <button onClick={()=>addMbr(team.id)}
-                            style={{marginTop:10,width:"100%",padding:"8px",background:"rgba(255,255,255,0.07)",
-                                    border:`1px dashed ${team.color}88`,borderRadius:8,color:team.color,
-                                    fontWeight:700,fontSize:12,cursor:"pointer"}}>
-                            + Aggiungi giocatore
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* ══ SCOMMESSE ══ */}
-            {tab==="scommesse" && (
-              <div>
-
-                {/* FAVORITA banner */}
-                {(()=>{
-                  const top=probs.find(p=>p.prob>0);
-                  const tt=top?byId(top.id):null;
-                  if(!tt) return (
-                    <div style={{...card({padding:"18px",marginBottom:14,textAlign:"center"})}}>
-                      <div style={{fontSize:13,color:"rgba(255,255,255,0.4)"}}>Inserisci le quote qui sotto per vedere le probabilità 👇</div>
-                    </div>
-                  );
-                  return (
-                    <div style={{...card({padding:"16px",marginBottom:14,borderColor:tt.color,background:"rgba(0,0,0,0.65)",textAlign:"center"})}}>
-                      <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",letterSpacing:3,textTransform:"uppercase"}}>⭐ Favorita al momento</div>
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:14,marginTop:10}}>
-                        <Logo logo={tt.logo} name={tt.name} color={tt.color} size={56}/>
-                        <div>
-                          <div style={{fontSize:20,fontWeight:900,color:tt.color}}>{tt.name}</div>
-                          <div style={{fontSize:32,fontWeight:900,color:"#ffe066",lineHeight:1}}>{top.prob.toFixed(1)}%</div>
-                          <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",marginTop:2}}>probabilità di vittoria</div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* QUOTE INPUT + BARS */}
-                <div style={{...card({padding:"16px",marginBottom:14})}}>
-                  <div style={{fontSize:13,fontWeight:800,color:"#ffe066",marginBottom:4}}>🎲 Quote delle squadre</div>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",marginBottom:14}}>Inserisci la quota (es. 1.50 · 2.00 · 4.00). Valori più bassi = più favorita.</div>
-
-                  {teams.map(team=>{
-                    const p=probs.find(x=>x.id===team.id);
-                    const pct=p?p.prob:0;
-                    const rank=probs.filter(x=>x.prob>0).findIndex(x=>x.id===team.id);
-                    return (
-                      <div key={team.id} style={{marginBottom:16}}>
-                        <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:6}}>
-                          <Logo logo={team.logo} name={team.name} color={team.color} size={28}/>
-                          <span style={{flex:1,fontSize:13,fontWeight:700,color:team.color,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{team.name}</span>
-                          <div style={{display:"flex",alignItems:"center",gap:6}}>
-                            <span style={{fontSize:11,color:"rgba(255,255,255,0.35)"}}>Quota</span>
-                            <NumInput value={odds[team.id]||""} onChange={v=>setOdds(prev=>({...prev,[team.id]:v}))}
-                              placeholder="2.00"
-                              style={{width:68,fontSize:16,fontWeight:700,padding:"6px 4px",border:`2px solid ${team.color}77`}}/>
-                          </div>
-                          <span style={{fontSize:14,fontWeight:900,color:pct>0?"#ffe066":"rgba(255,255,255,0.2)",minWidth:48,textAlign:"right"}}>
-                            {pct>0?pct.toFixed(1)+"%":"—"}
-                          </span>
-                        </div>
-                        {/* probability bar */}
-                        <div style={{height:12,background:"rgba(255,255,255,0.08)",borderRadius:6,overflow:"hidden",position:"relative"}}>
-                          <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(90deg,${team.color}99,${team.color})`,borderRadius:6,transition:"width .45s ease",position:"relative"}}>
-                            {pct>8&&<span style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",fontSize:9,fontWeight:800,color:"#fff",whiteSpace:"nowrap"}}>{rank===0?"👑":""}</span>}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* RANKING CARD */}
-                {probs.some(p=>p.prob>0)&&(
-                  <div style={{...card({padding:"16px"})}}>
-                    <div style={{fontSize:13,fontWeight:800,color:"#ffe066",marginBottom:12}}>📊 Ranking Probabilità</div>
-                    {probs.map((p,idx)=>{
-                      if(p.prob===0) return null;
-                      const t=byId(p.id);
-                      const medal=idx===0?"🥇":idx===1?"🥈":idx===2?"🥉":`${idx+1}.`;
-                      return (
-                        <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
-                          <span style={{fontSize:idx<3?18:13,width:28,textAlign:"center"}}>{medal}</span>
-                          <Logo logo={t.logo} name={t.name} color={t.color} size={30}/>
-                          <span style={{flex:1,fontSize:13,fontWeight:700,color:t.color,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.name}</span>
-                          {odds[p.id]&&<span style={{fontSize:11,color:"rgba(255,255,255,0.35)",flexShrink:0}}>quota {parseFloat(odds[p.id]).toFixed(2)}</span>}
-                          <span style={{fontSize:17,fontWeight:900,color:"#ffe066",minWidth:54,textAlign:"right"}}>{p.prob.toFixed(1)}%</span>
-                        </div>
-                      );
-                    })}
-                    <div style={{marginTop:10,fontSize:11,color:"rgba(255,255,255,0.3)",textAlign:"center"}}>
-                      Probabilità normalizzate dalla quota · Si aggiornano in tempo reale
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── RESET ── */}
-            <div style={{marginTop:28,textAlign:"center"}}>
-              <button onClick={reset} style={{padding:"8px 18px",background:"rgba(255,40,40,0.18)",border:"1px solid rgba(255,80,80,0.38)",borderRadius:20,color:"#ff8080",fontSize:12,cursor:"pointer",fontWeight:700}}>
-                🔄 Reset Torneo
-              </button>
-            </div>
-
-          </div>
-        </div>
-      );
-    }
-
-    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
-  </script>
+/* ═══ START ═════════════════════════════════════════════════════ */
+render();
+</script>
 </body>
 </html>
