@@ -4,6 +4,11 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>🏐 Beach Volley Torneo</title>
+
+<!-- 1. LIBRERIE FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Trebuchet MS',Tahoma,sans-serif;background:linear-gradient(160deg,#b5651d 0%,#d4a04a 25%,#e8c97a 45%,#c19a50 65%,#8b4513 100%);min-height:100vh;color:#fff;}
@@ -30,7 +35,38 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 <script>
 'use strict';
 
-/* ═══ DATA ══════════════════════════════════════════════════════ */
+/* ═══ 2. CONFIGURAZIONE FIREBASE ════════════════════════════════ */
+// ⬇️ INCOLLA QUI IL TUO firebaseConfig COPIATO DALLA CONSOLE ⬇️
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyBvnnfJCMq5uEjMA7VoFuxV7m63xA3-fEA",
+
+  authDomain: "inviaggiocongiovanni.firebaseapp.com",
+
+  databaseURL: "https://inviaggiocongiovanni-default-rtdb.europe-west1.firebasedatabase.app",
+
+  projectId: "inviaggiocongiovanni",
+
+  storageBucket: "inviaggiocongiovanni.firebasestorage.app",
+
+  messagingSenderId: "357273410261",
+
+  appId: "1:357273410261:web:4382c0aa1528328d5da05c",
+
+  measurementId: "G-MXP3N2JZ5F"
+
+};
+
+// Inizializza Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+// Creiamo un documento unico chiamato "stato_attuale" dentro la cartella "torneo"
+const docRef = db.collection("torneo").doc("stato_attuale");
+
+
+/* ═══ DATA INIZIALE ═════════════════════════════════════════════ */
 var INIT_TEAMS = [
   {id:1,name:"I di...Sperati",           logo:"",color:"#e74c3c",members:["Casagrande Lorenza","Paterno Ivo","Purin Silvia","Paterno Mara"]},
   {id:2,name:"Monzarella",               logo:"",color:"#f39c12",members:["Lorenzo Rigo","Simone Sittoni Wassermann","Giacomo Gaiardo","Davide Ballin"]},
@@ -41,16 +77,49 @@ var INIT_TEAMS = [
 ];
 
 /* ═══ STATE ═════════════════════════════════════════════════════ */
-var teams       = JSON.parse(JSON.stringify(INIT_TEAMS));
-var matches     = genMatches(teams);
+var teams       = [];
+var matches     = [];
+var odds        = {1:'',2:'',3:'',4:'',5:'',6:''};
+var isLoaded    = false; // Serve per sapere se abbiamo scaricato i dati
+
 var tab         = 'cal';
 var openMatch   = null;
 var openTeam    = null;
 var editLogo    = null;
 var logoInput   = '';
-var editMember  = null; // {tid,idx}
+var editMember  = null;
 var memberInput = '';
-var odds        = {1:'',2:'',3:'',4:'',5:'',6:''};
+
+/* ═══ SINCRONIZZAZIONE DATABASE ═════════════════════════════════ */
+// Questo "ascolta" il database. Se qualcuno cambia i punti dal suo telefono, 
+// questa funzione scatta in tempo reale e aggiorna la pagina!
+docRef.onSnapshot(function(doc) {
+  if (doc.exists) {
+    var data = doc.data();
+    teams = data.teams || [];
+    matches = data.matches || [];
+    odds = data.odds || {1:'',2:'',3:'',4:'',5:'',6:''};
+    isLoaded = true;
+    render(); // Disegna l'interfaccia con i dati aggiornati
+  } else {
+    // È la prima volta in assoluto! Salviamo i dati base sul database
+    teams = JSON.parse(JSON.stringify(INIT_TEAMS));
+    matches = genMatches(teams);
+    odds = {1:'',2:'',3:'',4:'',5:'',6:''};
+    isLoaded = true;
+    saveToDB();
+  }
+});
+
+function saveToDB() {
+  // Salva lo stato attuale sul Cloud
+  docRef.set({
+    teams: teams,
+    matches: matches,
+    odds: odds
+  }, { merge: true });
+}
+
 
 /* ═══ HELPERS ═══════════════════════════════════════════════════ */
 function genMatches(ts){
@@ -96,6 +165,12 @@ function logoEl(team,size){
 
 /* ═══ RENDER ════════════════════════════════════════════════════ */
 function render(){
+  // Se non siamo ancora connessi a Firebase, mostra la schermata di caricamento
+  if(!isLoaded){
+    document.getElementById('app').innerHTML='<div style="text-align:center;padding:80px 20px;font-size:18px;font-weight:800;color:#ffe066;">⏳ Connessione al server in corso...</div>';
+    return;
+  }
+
   var played=matches.filter(function(m){return m.played;}).length;
   var pct=(played/matches.length*100).toFixed(0);
 
@@ -284,7 +359,7 @@ function buildSqd(){
 function buildBet(){
   var h='<div class="card" style="padding:16px;margin-bottom:12px;">';
   h+='<div style="font-size:14px;font-weight:800;color:#ffe066;margin-bottom:4px;">💰 Quote di Vittoria Torneo</div>';
-  h+='<div style="font-size:11px;color:rgba(255,255,255,.42);margin-bottom:14px;line-height:1.6;">Quota decimale: <b style="color:#ccc;">1.5</b> = favorita &nbsp;·&nbsp; <b style="color:#ccc;">4.0</b> = outsider. Il grafico si aggiorna in tempo reale.</div>';
+  h+='<div style="font-size:11px;color:rgba(255,255,255,.42);margin-bottom:14px;line-height:1.6;">Quota decimale: <b style="color:#ccc;">1.5</b> = favorita &nbsp;·&nbsp; <b style="color:#ccc;">4.0</b> = outsider.</div>';
   h+='<div style="display:grid;gap:8px;">';
   teams.forEach(function(t){
     h+='<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(0,0,0,.45);border-radius:10px;">';
@@ -363,42 +438,28 @@ function afterRender(){
     };
   });
 
-  /* score inputs — partial update, no full re-render */
+  /* QUANDO SI INSERISCE UN PUNTEGGIO, SALVIAMO SUL DATABASE */
   document.querySelectorAll('input[data-mid]').forEach(function(inp){
-    inp.addEventListener('input',function(){
+    // Usiamo "change" così salva quando hai finito di digitare e clicchi fuori
+    inp.addEventListener('change',function(){
       var mid=parseInt(this.dataset.mid),fld=this.dataset.fld;
       var m=matches.find(function(x){return x.id===mid;});
       if(!m)return;
       m[fld]=this.value;
       m.played=['s1h','s1a','s2h','s2a'].every(function(f){return m[f]!==''&&!isNaN(+m[f]);});
-      /* patch card border */
-      var card=document.getElementById('mc'+mid);
-      if(card)card.style.borderColor=m.played?'rgba(100,255,150,.55)':'rgba(255,200,100,.28)';
-      /* patch result message */
-      var resEl=document.getElementById('res'+mid);
-      if(resEl){
-        var r=m.played?matchResult(m):null;
-        if(r){
-          var home=getTeam(m.home),away=getTeam(m.away);
-          resEl.style.color=r.sH===r.sA?'#ffe066':'#6eff9a';
-          resEl.textContent=r.sH===r.sA?'🤝 Pareggio 1-1':'🏐 Vince '+(r.sH>r.sA?home.name:away.name)+'!';
-        } else {
-          resEl.textContent='';
-        }
-      }
+      saveToDB(); // Scrive sul cloud
     });
   });
 
-  /* odds inputs — patch chart only */
+  /* QUANDO SI INSERISCE UNA QUOTA, SALVIAMO SUL DATABASE */
   document.querySelectorAll('input[data-oid]').forEach(function(inp){
-    inp.addEventListener('input',function(){
+    inp.addEventListener('change',function(){
       odds[parseInt(this.dataset.oid)]=this.value;
-      var c=document.getElementById('prob-chart');if(c)c.innerHTML=buildChart();
-      var a=document.getElementById('bet-analysis');if(a)a.innerHTML=buildAnalysis();
+      saveToDB(); // Scrive sul cloud
     });
   });
 
-  /* logo text input */
+  /* input testo loghi */
   var li=document.getElementById('logo-inp');
   if(li){
     li.addEventListener('input',function(){logoInput=this.value;});
@@ -406,7 +467,7 @@ function afterRender(){
     li.focus();var len=li.value.length;li.setSelectionRange(len,len);
   }
 
-  /* member text input */
+  /* input testo membri */
   var mi=document.getElementById('mem-inp');
   if(mi){
     mi.addEventListener('input',function(){memberInput=this.value;});
@@ -415,17 +476,12 @@ function afterRender(){
   }
 }
 
-/* ═══ ACTIONS ═══════════════════════════════════════════════════ */
+/* ═══ AZIONI SULLA UI (non salvano nel DB) ══════════════════════ */
 function setTab(t)      {tab=t;openMatch=null;render();}
 function toggleMatch(id){openMatch=openMatch===id?null:id;render();}
 function toggleTeam(id) {openTeam=openTeam===id?null:id;editLogo=null;editMember=null;logoInput='';memberInput='';render();}
-function doRandomize()  {matches=shuffle(matches).map(function(m,i){return Object.assign({},m,{id:i+1});});render();}
-
 function startEditLogo(tid){editLogo=tid;logoInput=teams.find(function(t){return t.id===tid;}).logo;render();}
 function cancelLogo()      {editLogo=null;logoInput='';render();}
-function saveLogo(tid)     {teams=teams.map(function(t){return t.id===tid?Object.assign({},t,{logo:logoInput.trim()}):t;});editLogo=null;logoInput='';render();}
-function clearLogo(tid)    {teams=teams.map(function(t){return t.id===tid?Object.assign({},t,{logo:''}):t;});render();}
-
 function startEditMember(tid,idx){
   var t=teams.find(function(x){return x.id===tid;});
   editMember={tid:tid,idx:idx};
@@ -433,32 +489,45 @@ function startEditMember(tid,idx){
   render();
 }
 function cancelMember(){editMember=null;memberInput='';render();}
+
+/* ═══ AZIONI SUI DATI (salvano nel DB) ══════════════════════════ */
+function doRandomize()  {
+  matches=shuffle(matches).map(function(m,i){return Object.assign({},m,{id:i+1});});
+  saveToDB();
+}
+function saveLogo(tid) {
+  teams=teams.map(function(t){return t.id===tid?Object.assign({},t,{logo:logoInput.trim()}):t;});
+  editLogo=null; logoInput='';
+  saveToDB();
+}
+function clearLogo(tid) {
+  teams=teams.map(function(t){return t.id===tid?Object.assign({},t,{logo:''}):t;});
+  saveToDB();
+}
 function saveMember(tid,idx){
   teams=teams.map(function(t){
     if(t.id!==tid)return t;
     var m=t.members.slice();m[idx]=memberInput.trim()||'TBD';
     return Object.assign({},t,{members:m});
   });
-  editMember=null;memberInput='';render();
+  editMember=null; memberInput='';
+  saveToDB();
 }
 function removeMember(tid,idx){
-  editMember=null;memberInput='';
+  editMember=null; memberInput='';
   teams=teams.map(function(t){
     if(t.id!==tid)return t;
     return Object.assign({},t,{members:t.members.filter(function(_,i){return i!==idx;})});
   });
-  render();
+  saveToDB();
 }
 function addMember(tid){
   teams=teams.map(function(t){
     if(t.id!==tid)return t;
     return Object.assign({},t,{members:t.members.concat('TBD')});
   });
-  render();
+  saveToDB();
 }
-
-/* ═══ START ═════════════════════════════════════════════════════ */
-render();
 </script>
 </body>
 </html>
