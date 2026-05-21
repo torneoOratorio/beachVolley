@@ -337,13 +337,26 @@ function buildCal(){
         h+='<div style="font-size:10px;color:#ffe066;font-weight:700;margin-bottom:8px;text-align:center;">'+s.l+'</div>';
         h+='<div style="display:flex;align-items:center;justify-content:center;gap:10px;">';
         h+='<div style="text-align:center;"><div style="font-size:9px;color:'+home.color+';margin-bottom:3px;font-weight:700;">'+esc(home.name.split(' ')[0])+'</div>';
-        h+='<input class="score-inp" type="number" min="0" max="99" value="'+esc(m[s.fh])+'" data-mid="'+m.id+'" data-fld="'+s.fh+'"></div>';
+        if(isAdmin){
+          h+='<input class="score-inp" type="number" min="0" max="99" value="'+esc(m[s.fh])+'" data-mid="'+m.id+'" data-fld="'+s.fh+'">';
+        } else {
+          h+='<div class="score-inp" style="border-color:rgba(255,200,100,.18);">'+(m[s.fh]!==''&&m[s.fh]!=null?esc(m[s.fh]):'–')+'</div>';
+        }
+        h+='</div>';
         h+='<span style="color:rgba(255,255,255,.2);font-size:18px;">·</span>';
         h+='<div style="text-align:center;"><div style="font-size:9px;color:'+away.color+';margin-bottom:3px;font-weight:700;">'+esc(away.name.split(' ')[0])+'</div>';
-        h+='<input class="score-inp" type="number" min="0" max="99" value="'+esc(m[s.fa])+'" data-mid="'+m.id+'" data-fld="'+s.fa+'"></div>';
+        if(isAdmin){
+          h+='<input class="score-inp" type="number" min="0" max="99" value="'+esc(m[s.fa])+'" data-mid="'+m.id+'" data-fld="'+s.fa+'">';
+        } else {
+          h+='<div class="score-inp" style="border-color:rgba(255,200,100,.18);">'+(m[s.fa]!==''&&m[s.fa]!=null?esc(m[s.fa]):'–')+'</div>';
+        }
+        h+='</div>';
         h+='</div></div>';
       });
       h+='</div>';
+      if(!isAdmin){
+        h+='<div style="margin-top:8px;text-align:center;font-size:11px;color:#9ad8ff;">🔒 Solo l\'admin può inserire i punteggi</div>';
+      }
       h+='<div id="res'+m.id+'" style="margin-top:10px;text-align:center;font-size:13px;font-weight:800;color:'+resColor+';">'+resText+'</div>';
       h+='</div>';
     }
@@ -394,27 +407,31 @@ function buildSqd(){
     if(isOpen){
       h+='<div style="padding:0 16px 16px;border-top:1px solid '+team.color+'55;">';
 
-      /* logo editor */
+      /* logo editor (solo admin) */
       h+='<div style="margin-top:14px;margin-bottom:16px;">';
-      h+='<div style="font-size:11px;color:#ffe066;font-weight:700;margin-bottom:8px;">🖼️ Logo squadra (URL)</div>';
+      h+='<div style="font-size:11px;color:#ffe066;font-weight:700;margin-bottom:8px;">🖼️ Logo squadra</div>';
       h+='<div style="display:flex;align-items:center;gap:10px;">'+logoEl(team,52);
       h+='<div style="flex:1;">';
-      if(editLogo===team.id){
-        h+='<input id="logo-inp" class="inp" type="text" value="'+esc(logoInput)+'" placeholder="https://esempio.com/logo.png" style="margin-bottom:8px;">';
-        h+='<div style="display:flex;gap:8px;"><button class="btn-gold" onclick="saveLogo('+team.id+')" style="flex:1;padding:7px;font-size:12px;">✓ Salva</button>';
-        h+='<button class="btn-red" onclick="cancelLogo()" style="padding:7px 12px;font-size:12px;">✕</button></div>';
+      if(isAdmin){
+        if(editLogo===team.id){
+          h+='<input id="logo-inp" class="inp" type="text" value="'+esc(logoInput)+'" placeholder="https://esempio.com/logo.png" style="margin-bottom:8px;">';
+          h+='<div style="display:flex;gap:8px;"><button class="btn-gold" onclick="saveLogo('+team.id+')" style="flex:1;padding:7px;font-size:12px;">✓ Salva</button>';
+          h+='<button class="btn-red" onclick="cancelLogo()" style="padding:7px 12px;font-size:12px;">✕</button></div>';
+        } else {
+          h+='<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+          h+='<button onclick="startEditLogo('+team.id+')" style="padding:7px 14px;background:rgba(255,220,80,.18);border:1px solid rgba(255,220,80,.4);border-radius:8px;color:#ffe066;font-weight:700;font-size:11px;cursor:pointer;">'+(team.logo?'✏️ Cambia URL':'➕ Aggiungi URL')+'</button>';
+          if(team.logo)h+='<button onclick="clearLogo('+team.id+')" style="padding:7px 12px;background:rgba(255,80,80,.22);border:1px solid rgba(255,80,80,.3);border-radius:8px;color:#ff8080;font-weight:700;font-size:11px;cursor:pointer;">🗑️</button>';
+          h+='</div>';
+        }
       } else {
-        h+='<div style="display:flex;gap:8px;flex-wrap:wrap;">';
-        h+='<button onclick="startEditLogo('+team.id+')" style="padding:7px 14px;background:rgba(255,220,80,.18);border:1px solid rgba(255,220,80,.4);border-radius:8px;color:#ffe066;font-weight:700;font-size:11px;cursor:pointer;">'+(team.logo?'✏️ Cambia URL':'➕ Aggiungi URL')+'</button>';
-        if(team.logo)h+='<button onclick="clearLogo('+team.id+')" style="padding:7px 12px;background:rgba(255,80,80,.22);border:1px solid rgba(255,80,80,.3);border-radius:8px;color:#ff8080;font-weight:700;font-size:11px;cursor:pointer;">🗑️</button>';
-        h+='</div>';
+        h+='<div style="font-size:11px;color:rgba(255,255,255,.4);font-style:italic;">'+(team.logo?'Logo impostato':'Nessun logo')+'</div>';
       }
       h+='</div></div></div>';
 
       /* members editor */
       h+='<div style="font-size:11px;color:#ffe066;font-weight:700;margin-bottom:8px;">👥 Giocatori</div>';
       team.members.forEach(function(member,i){
-        var isEditingThis=editMember&&editMember.tid===team.id&&editMember.idx===i;
+        var isEditingThis=isAdmin&&editMember&&editMember.tid===team.id&&editMember.idx===i;
         h+='<div style="margin-bottom:6px;">';
         if(isEditingThis){
           h+='<div style="display:flex;gap:6px;">';
@@ -426,13 +443,19 @@ function buildSqd(){
           h+='<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(0,0,0,.45);border-radius:8px;">';
           h+='<span style="color:'+team.color+';font-size:10px;">●</span>';
           h+='<span style="font-size:13px;flex:1;color:'+(member==='TBD'?'rgba(255,255,255,.28)':'rgba(255,255,255,.9)')+';font-style:'+(member==='TBD'?'italic':'normal')+';">'+(member==='TBD'?'⏳ Da definire':esc(member))+'</span>';
-          h+='<button onclick="startEditMember('+team.id+','+i+')" style="padding:3px 8px;background:rgba(255,220,80,.2);border:none;border-radius:6px;color:#ffe066;font-size:11px;cursor:pointer;">✏️</button>';
-          h+='<button onclick="removeMember('+team.id+','+i+')" style="padding:3px 8px;background:rgba(255,80,80,.2);border:none;border-radius:6px;color:#ff8080;font-size:11px;cursor:pointer;">✕</button>';
+          if(isAdmin){
+            h+='<button onclick="startEditMember('+team.id+','+i+')" style="padding:3px 8px;background:rgba(255,220,80,.2);border:none;border-radius:6px;color:#ffe066;font-size:11px;cursor:pointer;">✏️</button>';
+            h+='<button onclick="removeMember('+team.id+','+i+')" style="padding:3px 8px;background:rgba(255,80,80,.2);border:none;border-radius:6px;color:#ff8080;font-size:11px;cursor:pointer;">✕</button>';
+          }
           h+='</div>';
         }
         h+='</div>';
       });
-      h+='<button onclick="addMember('+team.id+')" style="margin-top:6px;width:100%;padding:9px;background:rgba(255,220,80,.08);border:1.5px dashed rgba(255,220,80,.4);border-radius:8px;color:#ffe066;font-weight:700;font-size:12px;cursor:pointer;">+ Aggiungi giocatore</button>';
+      if(isAdmin){
+        h+='<button onclick="addMember('+team.id+')" style="margin-top:6px;width:100%;padding:9px;background:rgba(255,220,80,.08);border:1.5px dashed rgba(255,220,80,.4);border-radius:8px;color:#ffe066;font-weight:700;font-size:12px;cursor:pointer;">+ Aggiungi giocatore</button>';
+      } else {
+        h+='<div style="margin-top:8px;text-align:center;font-size:11px;color:#9ad8ff;">🔒 Solo l\'admin può modificare le squadre</div>';
+      }
       h+='</div>';
     }
     h+='</div>';
