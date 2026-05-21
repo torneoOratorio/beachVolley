@@ -34,6 +34,14 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 <script>
 'use strict';
 
+/* ═══════════════════════════════════════════════════════════════
+   ⚙️ CONFIGURAZIONE ADMIN
+   Cambia il PIN qui sotto con quello che vuoi tu (solo numeri o
+   lettere, niente spazi). Chi conosce questo PIN potrà impostare
+   le quote, le puntate, gli orari, randomizzare e bloccare.
+═══════════════════════════════════════════════════════════════ */
+var ADMIN_PIN = "volley2026";
+
 /* ═══ DATA INIZIALE ═════════════════════════════════════════════ */
 var INIT_TEAMS = [
   {id:1,name:"I di...Sperati",           logo:"",color:"#e74c3c",members:["Casagrande Lorenza","Paterno Ivo","Purin Silvia","Paterno Mara"]},
@@ -48,8 +56,13 @@ var INIT_TEAMS = [
 var teams       = [];
 var matches     = [];
 var odds        = {1:'',2:'',3:'',4:'',5:'',6:''};
-var bets        = {1:'',2:'',3:'',4:'',5:'',6:''}; // NUOVO STATO PATATINE
-var isLoaded    = false; 
+var bets        = {1:'',2:'',3:'',4:'',5:'',6:''};
+var startTime   = '18:00';   // orario prima partita
+var gapMin      = 20;        // minuti tra l'inizio di un match e il successivo
+var locked      = false;     // calendario bloccato (no randomize)
+var isLoaded    = false;
+
+var isAdmin     = (localStorage.getItem('bv_admin') === '1'); // admin per dispositivo
 
 var tab         = 'cal';
 var openMatch   = null;
@@ -73,29 +86,33 @@ const firebaseConfig = {
 };
 
 try {
-  // Inizializza Firebase
   if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
   }
   const db = firebase.firestore();
   docRef = db.collection("torneo").doc("stato_attuale");
 
-  // Ascolta il database
   docRef.onSnapshot(function(doc) {
     if (doc.exists) {
       var data = doc.data();
-      teams = data.teams || [];
-      matches = data.matches || [];
-      odds = data.odds || {1:'',2:'',3:'',4:'',5:'',6:''};
-      bets = data.bets || {1:'',2:'',3:'',4:'',5:'',6:''};
-      isLoaded = true;
-      render(); 
+      teams     = data.teams   || [];
+      matches   = data.matches || [];
+      odds      = data.odds    || {1:'',2:'',3:'',4:'',5:'',6:''};
+      bets      = data.bets    || {1:'',2:'',3:'',4:'',5:'',6:''};
+      startTime = data.startTime || '18:00';
+      gapMin    = (data.gapMin != null) ? data.gapMin : 20;
+      locked    = data.locked  || false;
+      isLoaded  = true;
+      render();
     } else {
-      teams = JSON.parse(JSON.stringify(INIT_TEAMS));
-      matches = genMatches(teams);
-      odds = {1:'',2:'',3:'',4:'',5:'',6:''};
-      bets = {1:'',2:'',3:'',4:'',5:'',6:''};
-      isLoaded = true;
+      teams     = JSON.parse(JSON.stringify(INIT_TEAMS));
+      matches   = genMatches(teams);
+      odds      = {1:'',2:'',3:'',4:'',5:'',6:''};
+      bets      = {1:'',2:'',3:'',4:'',5:'',6:''};
+      startTime = '18:00';
+      gapMin    = 20;
+      locked    = false;
+      isLoaded  = true;
       saveToDB();
     }
   }, function(error) {
@@ -114,7 +131,10 @@ function saveToDB() {
     teams: teams,
     matches: matches,
     odds: odds,
-    bets: bets
+    bets: bets,
+    startTime: startTime,
+    gapMin: gapMin,
+    locked: locked
   }, { merge: true });
 }
 
@@ -153,6 +173,22 @@ function standings(){
 }
 function getTeam(id){return teams.find(function(t){return t.id===id;});}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* ── orari ── */
+function parseHHMM(s){
+  var p=String(s).split(':');
+  var h=parseInt(p[0],10)||0;
+  var m=parseInt(p[1],10)||0;
+  return h*60+m;
+}
+function minToHHMM(tot){
+  tot=((tot%1440)+1440)%1440;
+  var h=Math.floor(tot/60), m=tot%60;
+  return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;
+}
+/* orario di inizio del match in posizione idx (0-based, ordine attuale) */
+function matchTime(idx){ return minToHHMM(parseHHMM(startTime)+idx*gapMin); }
+
 function logoEl(team,size){
   var init=team.name.charAt(0).toUpperCase();
   var fb='width:'+size+'px;height:'+size+'px;border-radius:50%;flex-shrink:0;background:'+team.color+'33;border:2px solid '+team.color+';display:inline-flex;align-items:center;justify-content:center;font-size:'+Math.round(size*.38)+'px;color:'+team.color+';font-weight:900;vertical-align:middle;';
@@ -160,9 +196,27 @@ function logoEl(team,size){
   return '<img src="'+esc(team.logo)+'" alt="" data-tl="'+team.id+'" data-sz="'+size+'" style="width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;border:2px solid '+team.color+';flex-shrink:0;vertical-align:middle;">';
 }
 
+/* ═══ ADMIN ═════════════════════════════════════════════════════ */
+function toggleAdmin(){
+  if(isAdmin){
+    isAdmin=false;
+    localStorage.removeItem('bv_admin');
+    render();
+  } else {
+    var pin=prompt('🔒 Inserisci il PIN admin:');
+    if(pin===null) return;
+    if(pin===ADMIN_PIN){
+      isAdmin=true;
+      localStorage.setItem('bv_admin','1');
+      render();
+    } else {
+      alert('❌ PIN errato');
+    }
+  }
+}
+
 /* ═══ RENDER ════════════════════════════════════════════════════ */
 function render(){
-  // Schermata di caricamento INIZIALE
   if(!isLoaded){
     document.getElementById('app').innerHTML='<div style="text-align:center;padding:80px 20px;font-size:18px;font-weight:800;color:#ffe066;">⏳ Connessione al server in corso...</div>';
     return;
@@ -174,7 +228,8 @@ function render(){
   var html='';
 
   /* HEADER */
-  html+='<div style="background:linear-gradient(180deg,rgba(0,70,150,0.96),rgba(0,110,210,0.84));padding:22px 20px 18px;text-align:center;border-bottom:4px solid rgba(255,220,80,.6);box-shadow:0 4px 30px rgba(0,0,0,.45);">';
+  html+='<div style="position:relative;background:linear-gradient(180deg,rgba(0,70,150,0.96),rgba(0,110,210,0.84));padding:22px 20px 18px;text-align:center;border-bottom:4px solid rgba(255,220,80,.6);box-shadow:0 4px 30px rgba(0,0,0,.45);">';
+  html+='<button onclick="toggleAdmin()" title="Modalità admin" style="position:absolute;top:10px;right:10px;z-index:5;background:'+(isAdmin?'rgba(110,255,154,.22)':'rgba(0,0,0,.4)')+';border:1.5px solid '+(isAdmin?'#6eff9a':'rgba(255,255,255,.28)')+';border-radius:20px;color:'+(isAdmin?'#6eff9a':'#fff')+';font-size:11px;font-weight:800;padding:5px 11px;cursor:pointer;">'+(isAdmin?'🔓 Admin':'🔒')+'</button>';
   html+='<div style="font-size:11px;letter-spacing:5px;color:#ffe066;text-transform:uppercase;">🏖️ Torneo Oratorio</div>';
   html+='<div style="font-size:26px;font-weight:900;letter-spacing:1px;">BEACH VOLLEY 🏐</div>';
   html+='<div style="font-size:12px;color:#ffe066;font-style:italic;margin-top:2px;">Girone All\'Italiana · 6 Squadre · 15 Partite</div>';
@@ -185,7 +240,7 @@ function render(){
 
   /* FORMAT STRIP */
   html+='<div style="background:rgba(0,0,0,.55);padding:8px 16px;display:flex;justify-content:center;gap:18px;font-size:12px;flex-wrap:wrap;">';
-  [['⏱️ Set 1','5 min'],['🔄 Pausa+cambio','2 min'],['⏱️ Set 2','5 min'],['📋 Tot.','~15 min']].forEach(function(p){
+  [['⏱️ Set 1','7 min'],['🔄 Cambio campo','~1 min'],['⏱️ Set 2','7 min'],['📋 Slot match','20 min']].forEach(function(p){
     html+='<div style="text-align:center;"><div style="color:#ffe066;font-weight:700;">'+p[0]+'</div><div style="color:rgba(255,255,255,.7);">'+p[1]+'</div></div>';
   });
   html+='</div>';
@@ -211,10 +266,42 @@ function render(){
 
 /* ── CALENDARIO ── */
 function buildCal(){
-  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
-  h+='<span style="font-size:12px;color:rgba(255,255,255,.5);">Tocca per inserire i punti</span>';
-  h+='<button onclick="doRandomize()" style="padding:8px 14px;background:linear-gradient(135deg,#ffe066,#ff9500);border:none;border-radius:20px;color:#333;font-weight:800;font-size:12px;cursor:pointer;">🔀 Randomizza</button>';
+  var h='';
+
+  /* riga riassunto orari + stato lock (visibile a tutti) */
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">';
+  h+='<span style="font-size:12px;color:rgba(255,255,255,.6);">🕐 Inizio <b style="color:#9ad8ff;">'+matchTime(0)+'</b> · Ultimo match <b style="color:#9ad8ff;">'+matchTime(matches.length-1)+'</b></span>';
+  if(locked) h+='<span style="font-size:11px;font-weight:800;color:#6eff9a;background:rgba(110,255,154,.16);border:1px solid rgba(110,255,154,.4);border-radius:14px;padding:4px 10px;">🔒 Calendario bloccato</span>';
   h+='</div>';
+
+  /* pannello controlli ADMIN */
+  if(isAdmin){
+    h+='<div class="card" style="padding:13px 14px;margin-bottom:14px;border-color:rgba(110,255,154,.4);">';
+    h+='<div style="font-size:11px;color:#6eff9a;font-weight:800;margin-bottom:11px;">🔧 Controlli Admin</div>';
+
+    h+='<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:13px;">';
+    h+='<div><div style="font-size:10px;color:rgba(255,255,255,.5);font-weight:700;margin-bottom:4px;text-transform:uppercase;">🕐 Orario inizio</div>';
+    h+='<input type="time" value="'+esc(startTime)+'" data-cfg="startTime" class="inp" style="width:130px;"></div>';
+    h+='<div><div style="font-size:10px;color:rgba(255,255,255,.5);font-weight:700;margin-bottom:4px;text-transform:uppercase;">⏱️ Slot (min)</div>';
+    h+='<input type="number" min="1" value="'+esc(gapMin)+'" data-cfg="gapMin" class="inp" style="width:90px;"></div>';
+    h+='</div>';
+
+    h+='<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+    if(locked){
+      h+='<button disabled style="flex:1;min-width:150px;padding:11px;background:rgba(255,255,255,.07);border:none;border-radius:10px;color:rgba(255,255,255,.4);font-weight:800;font-size:12px;cursor:not-allowed;">🔀 Randomizza (bloccato)</button>';
+    } else {
+      h+='<button onclick="doRandomize()" style="flex:1;min-width:150px;padding:11px;background:linear-gradient(135deg,#ffe066,#ff9500);border:none;border-radius:10px;color:#333;font-weight:800;font-size:12px;cursor:pointer;">🔀 Randomizza</button>';
+    }
+    h+='<div id="lockBtn" style="flex:1;min-width:170px;position:relative;overflow:hidden;padding:9px;border-radius:10px;border:2px solid '+(locked?'#6eff9a':'rgba(255,200,100,.5)')+';background:rgba(0,0,0,.45);color:'+(locked?'#6eff9a':'#ffe066')+';font-weight:800;font-size:12px;text-align:center;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:none;line-height:1.25;">';
+    h+='<div id="lockFill" style="position:absolute;top:0;left:0;height:100%;width:0;background:rgba(255,220,80,.35);pointer-events:none;"></div>';
+    h+='<span style="position:relative;pointer-events:none;">'+(locked?'🔒 BLOCCATO':'🔓 APERTO')+'<br><span style="font-size:9px;opacity:.85;font-weight:600;">tieni premuto per '+(locked?'sbloccare':'bloccare')+'</span></span>';
+    h+='</div>';
+    h+='</div>';
+
+    h+='</div>';
+  } else {
+    h+='<div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:12px;">Tocca un match per inserire i punti</div>';
+  }
 
   matches.forEach(function(m,idx){
     var home=getTeam(m.home),away=getTeam(m.away);
@@ -229,12 +316,13 @@ function buildCal(){
       :'<span style="color:rgba(255,255,255,.18);font-size:16px;padding:0 6px;">🆚</span>';
 
     h+='<div id="mc'+m.id+'" class="card" style="margin-bottom:9px;overflow:hidden;border-color:'+(m.played?'rgba(100,255,150,.55)':'rgba(255,200,100,.28)')+';">';
-    h+='<div onclick="toggleMatch('+m.id+')" style="padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;">';
-    h+='<span style="background:rgba(255,220,80,.18);color:#ffe066;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:800;flex-shrink:0;">#'+(idx+1)+'</span>';
-    h+='<div style="flex:1;display:flex;align-items:center;gap:7px;justify-content:flex-end;min-width:0;">';
-    h+='<span style="font-size:12px;font-weight:800;color:'+home.color+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(home.name)+'</span>'+logoEl(home,32);
+    h+='<div onclick="toggleMatch('+m.id+')" style="padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:7px;">';
+    h+='<span style="background:rgba(255,220,80,.18);color:#ffe066;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:800;flex-shrink:0;">#'+(idx+1)+'</span>';
+    h+='<span style="background:rgba(0,150,255,.22);color:#9ad8ff;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:800;flex-shrink:0;">🕐'+matchTime(idx)+'</span>';
+    h+='<div style="flex:1;display:flex;align-items:center;gap:6px;justify-content:flex-end;min-width:0;">';
+    h+='<span style="font-size:12px;font-weight:800;color:'+home.color+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(home.name)+'</span>'+logoEl(home,30);
     h+='</div><div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">'+scoreHtml+'</div>';
-    h+='<div style="flex:1;display:flex;align-items:center;gap:7px;min-width:0;">'+logoEl(away,32);
+    h+='<div style="flex:1;display:flex;align-items:center;gap:6px;min-width:0;">'+logoEl(away,30);
     h+='<span style="font-size:12px;font-weight:800;color:'+away.color+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(away.name)+'</span>';
     h+='</div><span style="color:rgba(255,255,255,.3);font-size:12px;flex-shrink:0;">'+(isOpen?'▲':'▼')+'</span>';
     h+='</div>'; // end header row
@@ -244,7 +332,7 @@ function buildCal(){
       var resText=r?(r.sH===r.sA?'🤝 Pareggio 1-1':'🏐 Vince '+(r.sH>r.sA?home.name:away.name)+'!'):'';
       h+='<div style="padding:4px 14px 14px;border-top:1px solid rgba(255,255,255,.1);">';
       h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">';
-      [{l:'⏱️ Set 1 (5 min)',fh:'s1h',fa:'s1a'},{l:'🔄 Set 2 (cambio)',fh:'s2h',fa:'s2a'}].forEach(function(s){
+      [{l:'⏱️ Set 1 (7 min)',fh:'s1h',fa:'s1a'},{l:'🔄 Set 2 (7 min)',fh:'s2h',fa:'s2a'}].forEach(function(s){
         h+='<div style="background:rgba(0,0,0,.52);border-radius:10px;padding:10px 12px;">';
         h+='<div style="font-size:10px;color:#ffe066;font-weight:700;margin-bottom:8px;text-align:center;">'+s.l+'</div>';
         h+='<div style="display:flex;align-items:center;justify-content:center;gap:10px;">';
@@ -354,14 +442,17 @@ function buildSqd(){
 
 /* ── SCOMMESSE ── */
 function buildBet(){
-  // Calcolo montepremi totale
   var totalPool = Object.values(bets).reduce(function(sum, val){ return sum + (parseFloat(val) || 0); }, 0);
 
   var h='<div class="card" style="padding:16px;margin-bottom:12px;">';
   h+='<div style="font-size:14px;font-weight:800;color:#ffe066;margin-bottom:4px;">💰 Quote e Scommesse 🍟</div>';
-  h+='<div style="font-size:11px;color:rgba(255,255,255,.42);margin-bottom:14px;line-height:1.6;">Imposta la quota e inserisci le "patatine" puntate su ogni squadra.</div>';
-  
-  // Banner Montepremi
+  if(isAdmin){
+    h+='<div style="font-size:11px;color:rgba(255,255,255,.42);margin-bottom:14px;line-height:1.6;">Imposta la quota e inserisci le "patatine" puntate su ogni squadra.</div>';
+  } else {
+    h+='<div style="font-size:11px;color:#9ad8ff;margin-bottom:14px;line-height:1.6;">🔒 Le quote e le puntate sono gestite dall\'admin. Qui puoi solo consultarle.</div>';
+  }
+
+  /* Banner Montepremi */
   h+='<div style="background:rgba(0,0,0,.45);border-radius:10px;padding:12px;text-align:center;margin-bottom:14px;">';
   h+='<div style="font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px;font-weight:700;">Montepremi Totale</div>';
   h+='<div id="tot-pool" style="font-size:24px;font-weight:900;color:#ff9500;margin-top:4px;">'+totalPool+' 🍟</div>';
@@ -379,16 +470,32 @@ function buildBet(){
     h+='    <span style="font-size:14px;font-weight:700;color:'+t.color+';flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(t.name)+'</span>';
     h+='  </div>';
     h+='  <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">';
+
+    /* QUOTA */
     h+='    <div style="display:flex;flex-direction:column;gap:4px;">';
     h+='      <span style="font-size:10px;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase;">Quota</span>';
-    h+='      <input type="number" min="1.01" step="0.05" value="'+esc(odds[t.id])+'" data-oid="'+t.id+'" placeholder="—" style="width:65px;text-align:center;background:rgba(0,0,0,.65);border:2px solid '+t.color+'88;border-radius:6px;color:#fff;font-size:15px;font-weight:800;padding:5px 0;outline:none;">';
+    if(isAdmin){
+      h+='      <input type="number" min="1.01" step="0.05" value="'+esc(odds[t.id])+'" data-oid="'+t.id+'" placeholder="—" style="width:65px;text-align:center;background:rgba(0,0,0,.65);border:2px solid '+t.color+'88;border-radius:6px;color:#fff;font-size:15px;font-weight:800;padding:5px 0;outline:none;">';
+    } else {
+      h+='      <div style="width:65px;text-align:center;font-size:15px;font-weight:800;color:#fff;padding:5px 0;">'+(odds[t.id]!==''&&odds[t.id]!=null?esc(odds[t.id]):'—')+'</div>';
+    }
     h+='    </div>';
+
     h+='    <span style="color:rgba(255,255,255,.2);font-weight:900;padding-top:16px;">×</span>';
+
+    /* PUNTATA */
     h+='    <div style="display:flex;flex-direction:column;gap:4px;">';
     h+='      <span style="font-size:10px;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase;">Puntata 🍟</span>';
-    h+='      <input type="number" min="0" step="1" value="'+esc(bets[t.id])+'" data-bid="'+t.id+'" placeholder="0" style="width:75px;text-align:center;background:rgba(0,0,0,.65);border:2px solid #ff950088;border-radius:6px;color:#fff;font-size:15px;font-weight:800;padding:5px 0;outline:none;">';
+    if(isAdmin){
+      h+='      <input type="number" min="0" step="1" value="'+esc(bets[t.id])+'" data-bid="'+t.id+'" placeholder="0" style="width:75px;text-align:center;background:rgba(0,0,0,.65);border:2px solid #ff950088;border-radius:6px;color:#fff;font-size:15px;font-weight:800;padding:5px 0;outline:none;">';
+    } else {
+      h+='      <div style="width:75px;text-align:center;font-size:15px;font-weight:800;color:#fff;padding:5px 0;">'+(bets[t.id]!==''&&bets[t.id]!=null?esc(bets[t.id]):'0')+'</div>';
+    }
     h+='    </div>';
+
     h+='    <span style="color:rgba(255,255,255,.2);font-weight:900;padding-top:16px;">=</span>';
+
+    /* VINCITA */
     h+='    <div style="display:flex;flex-direction:column;gap:4px;text-align:right;min-width:70px;">';
     h+='      <span style="font-size:10px;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase;">Vincita 🍟</span>';
     h+='      <span id="win'+t.id+'" style="font-size:17px;font-weight:900;color:#6eff9a;padding-top:3px;">'+(win>0?win:'—')+'</span>';
@@ -409,7 +516,7 @@ function buildBet(){
 function buildChart(){
   var raw=teams.map(function(t){var q=parseFloat(odds[t.id]);return{t:t,p:q>0?1/q:0};});
   var total=raw.reduce(function(s,x){return s+x.p;},0);
-  if(!total)return '<div style="text-align:center;color:rgba(255,255,255,.3);font-size:13px;padding:24px 0;">Inserisci le quote per vedere il grafico in tempo reale</div>';
+  if(!total)return '<div style="text-align:center;color:rgba(255,255,255,.3);font-size:13px;padding:24px 0;">Quote non ancora impostate dall\'admin</div>';
   var rows=raw.map(function(x){return{t:x.t,pct:x.p/total*100};}).sort(function(a,b){return b.pct-a.pct;});
   var h='';
   rows.forEach(function(x){
@@ -472,17 +579,57 @@ function afterRender(){
       if(!m)return;
       m[fld]=this.value;
       m.played=['s1h','s1a','s2h','s2a'].every(function(f){return m[f]!==''&&!isNaN(+m[f]);});
-      saveToDB(); 
+      saveToDB();
     });
   });
 
-  /* Aggiorna i calcoli delle scommesse in tempo reale senza ricaricare tutta la pagina */
+  /* CONFIG ORARI (admin) */
+  document.querySelectorAll('input[data-cfg]').forEach(function(inp){
+    inp.addEventListener('change',function(){
+      var k=this.dataset.cfg;
+      if(k==='startTime') startTime=this.value||'18:00';
+      if(k==='gapMin')    gapMin=Math.max(1,parseInt(this.value,10)||20);
+      saveToDB();
+      render();
+    });
+  });
+
+  /* TASTO LOCK — tieni premuto ~0.8s per bloccare/sbloccare */
+  var lb=document.getElementById('lockBtn');
+  if(lb){
+    var fill=document.getElementById('lockFill');
+    var holdTimer=null, completed=false;
+    var startHold=function(e){
+      e.preventDefault();
+      completed=false;
+      if(fill){ fill.style.transition='width .8s linear'; fill.style.width='100%'; }
+      holdTimer=setTimeout(function(){
+        completed=true;
+        locked=!locked;
+        saveToDB();
+        render();
+      },800);
+    };
+    var endHold=function(){
+      if(completed) return;
+      if(holdTimer){ clearTimeout(holdTimer); holdTimer=null; }
+      if(fill){ fill.style.transition='none'; fill.style.width='0'; }
+    };
+    lb.addEventListener('mousedown',startHold);
+    lb.addEventListener('touchstart',startHold,{passive:false});
+    lb.addEventListener('mouseup',endHold);
+    lb.addEventListener('mouseleave',endHold);
+    lb.addEventListener('touchend',endHold);
+    lb.addEventListener('touchcancel',endHold);
+  }
+
+  /* Aggiorna i calcoli delle scommesse in tempo reale */
   function updateBetUI() {
     var c=document.getElementById('prob-chart');if(c)c.innerHTML=buildChart();
     var a=document.getElementById('bet-analysis');if(a)a.innerHTML=buildAnalysis();
     var totalPool = Object.values(bets).reduce(function(sum, val){ return sum + (parseFloat(val) || 0); }, 0);
     var tp=document.getElementById('tot-pool');if(tp)tp.textContent=totalPool+' 🍟';
-    
+
     teams.forEach(function(t){
       var wEl=document.getElementById('win'+t.id);
       if(wEl){
@@ -494,21 +641,21 @@ function afterRender(){
     });
   }
 
-  /* LISTENER QUOTE */
+  /* LISTENER QUOTE (solo admin: gli input esistono solo in modalità admin) */
   document.querySelectorAll('input[data-oid]').forEach(function(inp){
     inp.addEventListener('change',function(){
       odds[parseInt(this.dataset.oid)]=this.value;
       updateBetUI();
-      saveToDB(); 
+      saveToDB();
     });
   });
 
-  /* LISTENER PATATINE (PUNTATE) */
+  /* LISTENER PATATINE (solo admin) */
   document.querySelectorAll('input[data-bid]').forEach(function(inp){
     inp.addEventListener('change',function(){
       bets[parseInt(this.dataset.bid)]=this.value;
       updateBetUI();
-      saveToDB(); 
+      saveToDB();
     });
   });
 
@@ -543,6 +690,7 @@ function cancelMember(){editMember=null;memberInput='';render();}
 
 /* ═══ AZIONI SUI DATI (salvano nel DB) ══════════════════════════ */
 function doRandomize()  {
+  if(locked){ alert('🔒 Il calendario è bloccato. Sblocca (tieni premuto il tasto LOCK) per poter randomizzare.'); return; }
   matches=shuffle(matches).map(function(m,i){return Object.assign({},m,{id:i+1});});
   saveToDB();
 }
