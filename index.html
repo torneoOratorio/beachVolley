@@ -27,6 +27,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 .btn-gold{background:#ffe066;border:none;border-radius:8px;color:#333;font-weight:800;cursor:pointer;}
 .btn-red{background:rgba(255,80,80,0.3);border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer;}
 .bar-fill{transition:width .6s cubic-bezier(.4,0,.2,1);}
+.order-inp{width:40px;text-align:center;background:rgba(255,220,80,.22);color:#ffe066;border:1.5px solid rgba(255,220,80,.55);border-radius:6px;padding:3px 2px;font-size:12px;font-weight:800;flex-shrink:0;outline:none;cursor:text;}
 </style>
 </head>
 <body>
@@ -298,6 +299,9 @@ function buildCal(){
     h+='</div>';
     h+='</div>';
 
+    /* NUOVO: spiegazione riordino partite */
+    h+='<div style="margin-top:12px;padding-top:11px;border-top:1px solid rgba(255,255,255,.1);font-size:10.5px;color:rgba(255,255,255,.5);line-height:1.6;">↕️ <b style="color:#ffe066;">Riordina le partite:</b> scrivi una nuova posizione nel riquadro <span style="background:rgba(255,220,80,.22);border:1px solid rgba(255,220,80,.55);border-radius:4px;color:#ffe066;font-weight:800;padding:1px 5px;">#</span> di una partita per spostarla. Le altre slittano e gli orari si aggiornano da soli. Funziona anche a calendario bloccato.</div>';
+
     h+='</div>';
   } else {
     h+='<div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:12px;">Tocca un match per inserire i punti</div>';
@@ -317,7 +321,12 @@ function buildCal(){
 
     h+='<div id="mc'+m.id+'" class="card" style="margin-bottom:9px;overflow:hidden;border-color:'+(m.played?'rgba(100,255,150,.55)':'rgba(255,200,100,.28)')+';">';
     h+='<div onclick="toggleMatch('+m.id+')" style="padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:7px;">';
-    h+='<span style="background:rgba(255,220,80,.18);color:#ffe066;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:800;flex-shrink:0;">#'+(idx+1)+'</span>';
+    /* NUOVO: numero ordine — modificabile solo per admin */
+    if(isAdmin){
+      h+='<input type="number" min="1" max="'+matches.length+'" value="'+(idx+1)+'" data-order="'+m.id+'" onclick="event.stopPropagation()" title="Cambia ordine: scrivi la nuova posizione" class="order-inp">';
+    } else {
+      h+='<span style="background:rgba(255,220,80,.18);color:#ffe066;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:800;flex-shrink:0;">#'+(idx+1)+'</span>';
+    }
     h+='<span style="background:rgba(0,150,255,.22);color:#9ad8ff;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:800;flex-shrink:0;">🕐'+matchTime(idx)+'</span>';
     h+='<div style="flex:1;display:flex;align-items:center;gap:6px;justify-content:flex-end;min-width:0;">';
     h+='<span style="font-size:12px;font-weight:800;color:'+home.color+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(home.name)+'</span>'+logoEl(home,30);
@@ -617,6 +626,18 @@ function afterRender(){
     });
   });
 
+  /* RIORDINO PARTITE (admin) — cambia la posizione scrivendo un nuovo numero */
+  document.querySelectorAll('input[data-order]').forEach(function(inp){
+    inp.addEventListener('click',function(e){ e.stopPropagation(); });
+    inp.addEventListener('change',function(e){
+      e.stopPropagation();
+      var mid=parseInt(this.dataset.order,10);
+      var newPos=parseInt(this.value,10);
+      if(isNaN(newPos)){ render(); return; }
+      moveMatch(mid,newPos);
+    });
+  });
+
   /* TASTO LOCK — tieni premuto ~0.8s per bloccare/sbloccare */
   var lb=document.getElementById('lockBtn');
   if(lb){
@@ -716,6 +737,19 @@ function doRandomize()  {
   if(locked){ alert('🔒 Il calendario è bloccato. Sblocca (tieni premuto il tasto LOCK) per poter randomizzare.'); return; }
   matches=shuffle(matches).map(function(m,i){return Object.assign({},m,{id:i+1});});
   saveToDB();
+}
+/* NUOVO: sposta una partita in una nuova posizione (1-based). Le altre slittano. */
+function moveMatch(matchId,newPos){
+  var oldIdx=matches.findIndex(function(m){return m.id===matchId;});
+  if(oldIdx<0) return;
+  newPos=Math.max(1,Math.min(matches.length,newPos))-1; // 0-based
+  if(newPos===oldIdx){ render(); return; }               // nessun cambiamento
+  var arr=matches.slice();
+  var item=arr.splice(oldIdx,1)[0];
+  arr.splice(newPos,0,item);
+  matches=arr;
+  saveToDB();
+  render();
 }
 function saveLogo(tid) {
   teams=teams.map(function(t){return t.id===tid?Object.assign({},t,{logo:logoInput.trim()}):t;});
